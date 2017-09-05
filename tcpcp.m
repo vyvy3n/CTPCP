@@ -5,7 +5,7 @@ function [L,S,obj,err,iter] = tcpcp(dim,g,GM,lambda,opts)
 % Description: to solve Tensor Compressive Principal Component Analysis 
 % based on Tensor Nuclear Norm problem by ADMM
 %
-% min_{X} ||L||_*+lambda*||S||_1, s.t. P_G(L+S)=P_G(L+S),
+% min_{L,S} ||L||_*+lambda*||S||_1, s.t. P_G(L+S)=P_G(L+S),
 %
 % where M is the original matrix,
 %       P_G is sampling based on Guassian Measurement.
@@ -28,7 +28,6 @@ function [L,S,obj,err,iter] = tcpcp(dim,g,GM,lambda,opts)
 %       obj     -    objective function value
 %       err     -    residual 
 %       iter    -    number of iterations
-
 
 tol = 1e-8; 
 max_iter = 500;

@@ -1,17 +1,19 @@
-function [X,obj,err,iter] = tcpcp(M,Gmatrix,opts)
-
+function [L,S,obj,err,iter] = tcpcp(dim,g,GM,lambda,opts)
+%
 % Tensor Compressive Principal Component Pursuit Algomrith
 %
 % Description: to solve Tensor Compressive Principal Component Analysis 
 % based on Tensor Nuclear Norm problem by ADMM
 %
-% min_{X} ||X||_*+lambda*||S||_1, s.t. P_G(X)=P_G(M),
-% where M is the original matrix
+% min_{X} ||L||_*+lambda*||S||_1, s.t. P_G(L+S)=P_G(L+S),
+%
+% where M is the original matrix,
+%       P_G is sampling based on Guassian Measurement.
 %
 % ---------------------------------------------
 % Input:
-%       M       -    d1*d2*d3 tensor
-%       omega   -    index of the observed entries
+%       X       -    d1*d2*d3 tensor
+%       lambda  -    >0, parameter
 %       opts    -    Structure value in Matlab. The fields are
 %           opts.tol        -   termination tolerance
 %           opts.max_iter   -   maximum number of iterations
@@ -21,15 +23,12 @@ function [X,obj,err,iter] = tcpcp(M,Gmatrix,opts)
 %           opts.DEBUG      -   0 or 1
 %
 % Output:
-%       X       -    d1*d2*d3 tensor
-%       err     -    residual
+%       L       -    d1*d2*d3 tensor
+%       S       -    d1*d2*d3 tensor
 %       obj     -    objective function value
+%       err     -    residual 
 %       iter    -    number of iterations
-%
-% version 1.0 - 25/06/2016
-%
-% Written by Canyi Lu (canyilu@gmail.com)
-% 
+
 
 tol = 1e-8; 
 max_iter = 500;
@@ -48,33 +47,37 @@ if isfield(opts, 'mu');          mu = opts.mu;                end
 if isfield(opts, 'max_mu');      max_mu = opts.max_mu;        end
 if isfield(opts, 'DEBUG');       DEBUG = opts.DEBUG;          end
 
-dim = size(M);
-k = length(dim);
-omegac = setdiff(1:prod(dim),omega);
-
-X = zeros(dim);
-X(omega) = M(omega);
-E = zeros(dim);
-Y = E;
+L = zeros(dim);
+S = zeros(dim);
+P = L;
+Q = S;
+Z1 = L;
+Z2 = S;
+m = prod(dim);
 
 iter = 0;
 for iter = 1 : max_iter
-    Xk = X;
-    Ek = E;
-    % update X
-    [X,tnnX] = prox_tnn(-E+M+Y/mu,1/mu); 
-    % update E
-    E = M-X+Y/mu;
-    E(omega) = 0;
-   
-    dY = M-X-E;
-    chgX = max(abs(Xk(:)-X(:)));
-    chgE = max(abs(Ek(:)-E(:)));
-    chg = max([chgX chgE max(abs(dY(:)))]);
+    Lk = L;
+    Sk = S;
+    % update P
+    [P,tnnP] = prox_tnn(L+Z1,1/mu);
+    % update Q
+    S = prox_l1(S+Z2,lambda/mu);
+    % update L
+    GM2 = GM'*GM;
+    L = reshape(pinv(GM2+eye(m))*(GM'*g+P(:)-GM2*S(:)),dim);
+    % update S
+    S = reshape(pinv(GM2+eye(m))*(GM'*g+Q(:)-GM2*L(:)),dim);
+    % dual update difference
+    dZ1 = L-P;
+    dZ2 = S-Q;
+    chgL = max(abs(Lk(:)-L(:)));
+    chgS = max(abs(Sk(:)-S(:)));
+    chg = max([ chgL chgS max(abs(dZ1(:))) max(abs(dZ2(:))) ]);
     if DEBUG
         if iter == 1 || mod(iter, 10) == 0
-            obj = tnnX;
-            err = norm(dY(:));
+            obj = tnnP+lambda*norm(S(:),1);
+            err = norm(dZ1(:))+norm(dZ2(:));
             disp(['iter ' num2str(iter) ', mu=' num2str(mu) ...
                     ', obj=' num2str(obj) ', err=' num2str(err)]); 
         end
@@ -83,8 +86,11 @@ for iter = 1 : max_iter
     if chg < tol
         break;
     end 
-    Y = Y + mu*dY;
+    % dual update Z1
+    Z1 = Z1 + dZ1;
+    % dual update Z2
+    Z2 = Z2 + dZ2;
     mu = min(rho*mu,max_mu);    
 end
-obj = tnnX;
-err = norm(dY(:));
+obj = tnnP+lambda*norm(S(:),1);
+err = norm(dZ1(:))+norm(dZ2(:));

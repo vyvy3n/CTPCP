@@ -3,12 +3,12 @@ clear
 % read image
 I = double(imread('./image/testimg.jpg'));
 X = I/255;
-X = X(31:60,31:60,:);
+X = X(41:60,41:60,:);
 dim = size(X);
 % Noise on X
 Xn = X;
 rng(0)
-ind = find(rand(numel(X),1)<0.05);
+ind = find(rand(numel(X),1)<0.3);
 Xn(ind) = rand(length(ind),1);
 
 %Xn = X+rand(size(X)).*(rand(size(X))<0.3);
@@ -26,7 +26,7 @@ optS.penalty = 1e4;
 %% Sampling
 
 % q: int, the number of sampled obeservations
-q = floor(0.5*numel(Xn));
+q = floor(0.9*numel(Xn));
 % Gauss sampling matrix GM
 GM = randn(q,numel(Xn));
 GM2 = GM'*GM;

@@ -65,9 +65,9 @@ for iter = 1 : max_iter
     % update Q
     Q = prox_l1(S+Z2/mu,lambda/mu);
     % update L
-    L = reshape(pinv(penalty*GM2+mu*eye(m))*(penalty*GM'*g+mu*P(:)-Z1(:)-penalty*GM2*S(:)),dim);
+    L = reshape(cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*P(:)-Z1(:)-penalty*GM2*S(:)),1e-10,200),dim);
     % update S
-    S = reshape(pinv(penalty*GM2+mu*eye(m))*(penalty*GM'*g+mu*Q(:)-Z2(:)-penalty*GM2*L(:)),dim);
+    S = reshape(cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*Q(:)-Z2(:)-penalty*GM2*L(:)),1e-10,200),dim);
     % dual update difference
     dZ1 = L-P;
     dZ2 = S-Q;

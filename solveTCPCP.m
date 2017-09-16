@@ -3,21 +3,22 @@ clear
 % read image
 I = double(imread('./image/testimg.jpg'));
 X = I/255;
-X = X(31:60,31:60,:);
+X = X(41:60,41:60,:);
 dim = size(X);
 % Noise on X
 Xn = X;
 rng(0)
-ind = find(rand(numel(X),1)<0.1);
-Xn = X+rand(size(X)).*(rand(size(X))<0.2);
+ind = find(rand(numel(X),1)<0.05);
+%Xn(ind) = rand(length(ind),1);
+Xn(15:16,15:16,:)=zeros(2,2,3)
 
 observeNoise = 0; % 1 for "add noise", 0 for "no noise" on observations
-lambda = 0.1/sqrt(max(dim(1:2))*dim(3)) % lambda in "||L||_* + \lambda ||S||_1"
+lambda = 1/sqrt(max(dim(1:2))*dim(3)) % lambda in "||L||_* + \lambda ||S||_1"
 
-%opts.mu = 0.1;
+opts.mu = 1e-1;
 opts.tol = 1e-6;
-%opts.rho = 1.1;
-opts.max_iter = 150;
+opts.rho = 1.05;
+opts.max_iter = 200;
 opts.DEBUG = 1;
 optS.penalty = 1e4;
 
@@ -32,7 +33,7 @@ g = GM*Xn(:); % sample
 % Noise on sampling observations
 if observeNoise == 1
     %g = g+ones(q,1).*(0.01*max(abs(g))*normrnd(0,1,[q,1]));
-    ind = find(rand(numel(g),1)<0.3);
+    ind = find(rand(numel(g),1)<0.05);
     g(ind) = rand(length(ind),1);
 end
 %imshow(reshape(pinv(GM'*GM)*GM'*g,dim))
@@ -46,16 +47,16 @@ maxP = max(abs(X(:)));
 
 figure(1)
 subplot(2,2,1)
-imshow(X/maxP)% original picture
+imshow(X/maxP)              % original picture
 title('Original Image');
 subplot(2,2,2)
-imshow(Xn/maxP)% original picture
+imshow(Xn/max(abs(Xn(:))))  % original picture
 title('Noise Observation');
 subplot(2,2,3)
-imshow(L/maxP)% L solved by TCPCP
+imshow(L/max(abs(L(:))))    % L solved by TCPCP
 title('L');
 subplot(2,2,4)
-imshow(S/maxP)% S solved by TCPCP
+imshow(S/max(abs(S(:))))    % S solved by TCPCP
 title('S');
 
 savefig('TCPCPresult.fig')

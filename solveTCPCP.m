@@ -16,9 +16,9 @@ Xn(ind) = rand(length(ind),1);
 observeNoise = 0; % 1 for "add noise", 0 for "no noise" on observations
 lambda = 1/sqrt(max(dim(1:2))*dim(3)) % lambda in "||L||_* + \lambda ||S||_1"
 
-opts.mu = 1e-3;
+opts.mu = 0.1;
 opts.tol = 1e-6;
-opts.rho = 1.2;
+opts.rho = 1.1;
 opts.max_iter = 300;
 opts.DEBUG = 1;
 optS.penalty = 1e4;

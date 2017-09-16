@@ -48,7 +48,8 @@ if isfield(opts, 'max_mu');      max_mu = opts.max_mu;        end
 if isfield(opts, 'penalty');     penalty = opts.penalty;      end
 if isfield(opts, 'DEBUG');       DEBUG = opts.DEBUG;          end
 
-L = zeros(dim);
+X = reshape(cgs(GM'*GM,GM'*g,1e-10, 200),dim);%zeros(dim);
+L = X;
 S = zeros(dim);
 P = L;
 Q = S;
@@ -61,9 +62,9 @@ for iter = 1 : max_iter
     Lk = L;
     Sk = S;
     % update P
-    [P,tnnP] = prox_tnn(L+Z1/mu,1/mu);
+    [P,tnnP] = prox_tnn(X-S+Z1/mu,1/mu);
     % update Q
-    Q = prox_l1(S+Z2/mu,lambda/mu);
+    Q = prox_l1(X-L+Z2/mu,lambda/mu);
     % update L
     L = reshape(cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*P(:)-Z1(:)-penalty*GM2*S(:)),1e-10,200),dim);
     % update S
@@ -79,9 +80,10 @@ for iter = 1 : max_iter
             obj = tnnP+lambda*norm(S(:),1);
             err = norm(dZ1(:))+norm(dZ2(:))+norm(GM*(L(:)-S(:))-g);
             disp(['iter ' num2str(iter) ', mu=' num2str(mu) ...
-                    ', obj=' num2str(obj) ', err=' num2str(err)])%...
-                    %', norm(P)=' num2str(norm(abs(P(:)))) ', norm(Q)=' num2str(norm(abs(Q(:))))...
-                    %', norm(L)=' num2str(norm(abs(L(:)))) ', norm(S)=' num2str(norm(abs(S(:))))]); 
+                    ', obj=' num2str(obj) ', err=' num2str(err)...
+                    ', norm(Z1)=' num2str(norm(abs(Z1(:)))) ', norm(Z2)=' num2str(norm(abs(Z2(:))))...
+                    ', norm(P)=' num2str(norm(abs(P(:)))) ', norm(Q)=' num2str(norm(abs(Q(:))))...
+                    ', norm(L)=' num2str(norm(abs(L(:)))) ', norm(S)=' num2str(norm(abs(S(:))))]); 
         end
     end
     

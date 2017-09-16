@@ -1,4 +1,4 @@
-function [P,Q,obj,err,iter] = tcpcp(dim,g,GM,GM2,lambda,opts)
+function [L,S,obj,err,iter] = tcpcp(dim,g,GM,GM2,lambda,opts)
 
 % Tensor Compressive Principal Component Pursuit Algomrith
 %
@@ -31,11 +31,11 @@ function [P,Q,obj,err,iter] = tcpcp(dim,g,GM,GM2,lambda,opts)
 
 tol = 1e-8; 
 max_iter = 500;
-rho = 1.1;
-mu = 1e-4;
+rho = 1.2;
+mu = 1e-2;
 max_mu = 1e10;
 DEBUG = 0;
-penalty = 1e3;
+penalty = 1000;
 
 if ~exist('opts', 'var')
     opts = [];
@@ -48,16 +48,15 @@ if isfield(opts, 'max_mu');      max_mu = opts.max_mu;        end
 if isfield(opts, 'penalty');     penalty = opts.penalty;      end
 if isfield(opts, 'DEBUG');       DEBUG = opts.DEBUG;          end
 
-% initialize X by the LS solution of GM*X=g
-X = reshape(cgs(GM'*GM,GM'*g,1e-10, 200),dim);%zeros(dim);
-% initialize L by X
+X = reshape(GM\g,dim);%
 L = X;
-% initialize S by zeors
 S = zeros(dim);
-P = L;
-Q = S;
-Z1 = L;
-Z2 = S;
+%P = L;
+%Q = S;
+Z1 = zeros(dim);
+Z2 = zeros(dim);
+%Z1 = L;
+%Z2 = S;
 m = prod(dim);
 
 iter = 0;
@@ -65,13 +64,16 @@ for iter = 1 : max_iter
     Lk = L;
     Sk = S;
     % update P
-    [P,tnnP] = prox_tnn(X-Sk+Z1/mu,1/mu);
+    [P,tnnP] = prox_tnn(X-S+Z1/mu,1/mu);
     % update Q
-    Q = prox_l1(X-Lk+Z2/mu,lambda/mu);
+    Q = prox_l1(X-L+Z2/mu,lambda/mu);
+    penalty = mu;
     % update L
-    L = reshape(cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*P(:)-Z1(:)-penalty*GM2*S(:)),1e-10,500),dim);
+    [ll,~] = cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*P(:)-Z1(:)-penalty*GM2*S(:)),1e-8,200);
+    L = reshape(ll,dim);
     % update S
-    S = reshape(cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*Q(:)-Z2(:)-penalty*GM2*L(:)),1e-10,500),dim);
+    [ss,~] = cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*Q(:)-Z2(:)-penalty*GM2*L(:)),1e-8,200);
+    S = reshape(ss,dim);
     % dual update difference
     dZ1 = L-P;
     dZ2 = S-Q;
@@ -83,10 +85,10 @@ for iter = 1 : max_iter
             obj = tnnP+lambda*norm(S(:),1);
             err = norm(dZ1(:))+norm(dZ2(:))+norm(GM*(L(:)-S(:))-g);
             disp(['iter ' num2str(iter) ', mu=' num2str(mu) ...
-                    ', obj=' num2str(obj) ', err=' num2str(err)])%...
-                    %', norm(Z1)=' num2str(norm(abs(Z1(:)))) ', norm(Z2)=' num2str(norm(abs(Z2(:))))...
-                    %', norm(P)=' num2str(norm(abs(P(:)))) ', norm(Q)=' num2str(norm(abs(Q(:))))...
-                    %', norm(L)=' num2str(norm(abs(L(:)))) ', norm(S)=' num2str(norm(abs(S(:))))]); 
+                    ', obj=' num2str(obj) ', err=' num2str(err)...
+                    ', norm(Z1)=' num2str(norm(abs(Z1(:)))) ', norm(Z2)=' num2str(norm(abs(Z2(:))))...
+                    ', norm(P)=' num2str(norm(abs(P(:)))) ', norm(Q)=' num2str(norm(abs(Q(:))))...
+                    ', norm(L)=' num2str(norm(abs(L(:)))) ', norm(S)=' num2str(norm(abs(S(:))))]); 
         end
     end
     
@@ -97,9 +99,7 @@ for iter = 1 : max_iter
     Z1 = Z1 + mu*dZ1;
     % dual update Z2
     Z2 = Z2 + mu*dZ2;
-    % update X
-    X = L + S;
-    % update dual learning rate mu
+     X = L+S;
     mu = min(rho*mu,max_mu);    
 end
 obj = tnnP+lambda*norm(S(:),1);

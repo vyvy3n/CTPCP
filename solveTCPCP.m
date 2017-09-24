@@ -3,7 +3,7 @@ clear
 % read image
 I = double(imread('./image/testimg.jpg'));
 X = I/255;
-X = X(31:60,31:60,:);
+X = X(21:50,21:50,:);
 dim = size(X);
 % Noise on X
 Xn = X;
@@ -21,7 +21,7 @@ opts.tol = 1e-6;
 %opts.rho = 1.1;
 opts.max_iter = 500;
 opts.DEBUG = 1;
-optS.penalty = 1e4;
+%opts.penalty = 1e4;
 
 %% Sampling
 

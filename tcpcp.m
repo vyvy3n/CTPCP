@@ -32,7 +32,7 @@ function [L,S,obj,err,iter] = tcpcp(dim,g,GM,GM2,lambda,opts)
 tol = 1e-9; 
 max_iter = 500;
 rho = 1.05;
-mu = 0.01;
+mu = 0.001;
 max_mu = 1e10;
 DEBUG = 0;
 penalty = 0.01;
@@ -64,9 +64,9 @@ for iter = 1 : max_iter
     Lk = L;
     Sk = S;
     % update P
-    [P,tnnP] = prox_tnn(X-S+Z1/mu,1/mu);
+    [P,tnnP] = prox_tnn(L+Z1/mu,1/mu);
     % update Q
-    Q = prox_l1(X-L+Z2/mu,lambda/mu);
+    Q = prox_l1(S+Z2/mu,lambda/mu);
     %penalty = mu;
     % update L
     [ll,~] = cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*P(:)-Z1(:)-penalty*GM2*S(:)),1e-8,200);

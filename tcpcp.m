@@ -29,7 +29,7 @@ function [L,S,obj,err,iter] = tcpcp(dim,g,GM,GM2,lambda,opts)
 %       err     -    residual 
 %       iter    -    number of iterations
 
-tol = 1e-9; 
+tol = 1e-10; 
 max_iter = 500;
 rho = 1.05;
 mu = 0.001;

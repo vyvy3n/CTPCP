@@ -18,4 +18,4 @@ L = tprod(P, Q);
 
 S = rand([n,n,n3]);
 S = 2*(S>0.5)-1;
-S = S(rand(size(S))<=rhoS);
+S = S.*(rand(size(S))<=rhoS);

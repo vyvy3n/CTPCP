@@ -99,7 +99,7 @@ for iter = 1 : max_iter
     Z1 = Z1 + mu*dZ1;
     % dual update Z2
     Z2 = Z2 + mu*dZ2;
-     X = L+S;
+    X = L+S;
     mu = min(rho*mu,max_mu);    
 end
 obj = tnnP+lambda*norm(S(:),1);

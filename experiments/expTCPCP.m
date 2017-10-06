@@ -21,5 +21,6 @@ toc
 
 errL = norm(L(:)-Lhat(:),2)/norm(L(:),2);
 errS = norm(S(:)-Shat(:),2)/norm(S(:),2);
+
 l = errL < 1e-5;
 s = errS < 1e-8;

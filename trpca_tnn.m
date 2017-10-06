@@ -1,4 +1,7 @@
-function [L,S,obj,err,iter] = trpca_tnn(X,lambda,opts)
+function [L,S,obj,err,iter] = trpca_tnn(X,opts)
+
+dim = size(X);
+lambda = 1/sqrt(max(dim(1:2)));
 
 % Solve the Tensor Robust Principal Component Analysis based on Tensor Nuclear Norm problem by ADMM
 %

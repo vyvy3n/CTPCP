@@ -1,4 +1,4 @@
-function [L,S,obj,err,iter] = tcpcp(dim,g,GM,GM2,lambda,opts)
+function [P,Q,obj,err,iter] = tcpcp(dim,g,GM,GM2,lambda,opts)
 
 % Tensor Compressive Principal Component Pursuit Algomrith
 %
@@ -51,39 +51,43 @@ if isfield(opts, 'DEBUG');       DEBUG = opts.DEBUG;          end
 X = reshape(GM\g,dim);%
 L = X;
 S = zeros(dim);
-%P = L;
-%Q = S;
+P = L;
+Q = S;
 Z1 = zeros(dim);
 Z2 = zeros(dim);
+Z3 = zeros(size(g));
 %Z1 = L;
 %Z2 = S;
 m = prod(dim);
 
 iter = 0;
 for iter = 1 : max_iter
-    Lk = L;
-    Sk = S;
+    Pk = P;
+    Qk = Q;
     % update P
     [P,tnnP] = prox_tnn(L+Z1/mu,1/mu);
     % update Q
     Q = prox_l1(S+Z2/mu,lambda/mu);
     %penalty = mu;
     % update L
-    [ll,~] = cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*P(:)-Z1(:)-penalty*GM2*S(:)),1e-8,200);
+    %[ll,~] = cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*P(:)-Z1(:)-penalty*GM2*S(:)),1e-8,200);
+    [ll,~] = cgs((GM2+eye(m)),(GM'*g+P(:)-Z1(:)/mu-GM2*S(:)-GM'*Z3/mu),1e-6,200); 
     L = reshape(ll,dim);
     % update S
-    [ss,~] = cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*Q(:)-Z2(:)-penalty*GM2*L(:)),1e-8,200);
+    %[ss,~] = cgs((penalty*GM2+mu*eye(m)),(penalty*GM'*g+mu*Q(:)-Z2(:)-penalty*GM2*L(:)),1e-8,200);
+    [ss,~] = cgs((GM2+eye(m)),(GM'*g+Q(:)-Z2(:)/mu-GM2*L(:)-GM'*Z3/mu),1e-6,200); 
     S = reshape(ss,dim);
     % dual update difference
     dZ1 = L-P;
     dZ2 = S-Q;
-    chgL = max(abs(Lk(:)-L(:)));
-    chgS = max(abs(Sk(:)-S(:)));
-    chg = max([ chgL chgS max(abs(dZ1(:))) max(abs(dZ2(:)))]);
+    dZ3 = GM*(L(:)+S(:))-g;
+    chgP = max(abs(Pk(:)-P(:)));
+    chgQ = max(abs(Qk(:)-Q(:)));
+    chg = max([ chgP chgQ max(abs(dZ1(:))) max(abs(dZ2(:)))]);
     if DEBUG
         if iter == 1 || mod(iter, 10) == 0
-            obj = tnnP+lambda*norm(S(:),1);
-            err = norm(dZ1(:))+norm(dZ2(:))+norm(GM*(L(:)-S(:))-g);
+            obj = tnnP+lambda*norm(Q(:),1);
+            err = norm(dZ1(:))+norm(dZ2(:))+norm(dZ3(:));
             disp(['iter ' num2str(iter) ', mu=' num2str(mu) ...
                     ', obj=' num2str(obj) ', err=' num2str(err)...
                     ', norm(Z1)=' num2str(norm(abs(Z1(:)))) ', norm(Z2)=' num2str(norm(abs(Z2(:))))...
@@ -99,8 +103,9 @@ for iter = 1 : max_iter
     Z1 = Z1 + mu*dZ1;
     % dual update Z2
     Z2 = Z2 + mu*dZ2;
-    X = L+S;
+    Z3 = Z3 + mu*dZ3;
+    %X = L+S;
     mu = min(rho*mu,max_mu);    
 end
 obj = tnnP+lambda*norm(S(:),1);
-err = norm(dZ1(:))+norm(dZ2(:));
+err = norm(dZ1(:))+norm(dZ2(:))+norm(dZ3(:));

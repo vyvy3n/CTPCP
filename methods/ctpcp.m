@@ -91,27 +91,30 @@ for iter = 1 : max_iter
     else
         dZ3 = 0;
     end
-    chgP = max(abs(Pk(:)-P(:)));
-    chgQ = max(abs(Qk(:)-Q(:)));
-    chg = max([ chgP chgQ max(abs(dZ1(:))) max(abs(dZ2(:))) max(abs(dZ3(:)))]);
+
     if DEBUG
         if iter == 1 || mod(iter, 10) == 0
+            
             obj = tnnP+lambda*norm(Q(:),1);
             err = norm(Xreal(:)-L(:)-S(:));
+            chg = [max(abs(Pk(:)-P(:))), max(abs(Qk(:)-Q(:))),...
+                   max(abs(dZ1(:))), max(abs(dZ2(:))), max(abs(dZ3(:)))];
+            log = [norm(abs(Z1(:))), norm(abs(Z2(:))), norm(abs(Z3(:))),...
+                   norm(abs(P(:))), norm(abs(Q(:))),...
+                   norm(abs(L(:))), norm(abs(S(:)))];
+            
             % display
-            disp(['iter ' num2str(iter) ', mu=' num2str(mu) ...
-                    ', obj=' num2str(obj) ', err=' num2str(err)...
-                    ', norm(Z1)=' num2str(norm(abs(Z1(:)))) ', norm(Z2)=' num2str(norm(abs(Z2(:))))...
-                    ', norm(P)=' num2str(norm(abs(P(:)))) ', norm(Q)=' num2str(norm(abs(Q(:))))...
-                    ', norm(L)=' num2str(norm(abs(L(:)))) ', norm(S)=' num2str(norm(abs(S(:))))]); 
+            disp(sprintf(['iter %5d, mu=%5.4f, obj=%5.4f, err=%5.4f, '...
+                           'norm(Z1)=%5.4f, norm(Z2)=%5.4f, norm(Z3)=%5.4f, '... 
+                           'norm(P)=%5.4f, norm(Q)=%5.4f'], [iter, mu, obj, err, log(1:5)])); 
             % write experiments logs    
             errL = norm(L(:)-Lreal(:),2)/norm(Lreal(:),2);
             errS = norm(S(:)-Sreal(:),2)/norm(Sreal(:),2);
-            dlmwrite(['err-', num2str(i),'.csv'],[iter, errL, errS, mu, obj, err, chgP, chgQ, chg], 'delimiter',',','-append');
+            dlmwrite(['err-', num2str(i),'.csv'],[iter, errL, errS, max(chg), mu, obj, err, chg, log], 'delimiter',',','-append');
         end
-    end
+    end 
     
-    if chg < tol
+    if max(chg) < tol
         break;
     end 
     % dual update Z1

@@ -2,7 +2,7 @@ addpath(genpath(cd))
 clear
 
 Rho = [1.01, 1.005];
-N = [20];
+N = [30];
 Ratio = [0.1, 0.2];
 
 rng(666)
@@ -20,7 +20,7 @@ for round=1:5
             [X,L,S] = generateL(n,r,d,0.02);
 
             opts.mu = 0.0005;
-            opts.tol = 1e-5;
+            opts.tol = 1e-4;
             opts.rho = rho;
             opts.max_iter = 1e3*5;
             opts.penalty = 0.5;

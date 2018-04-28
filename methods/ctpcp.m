@@ -1,4 +1,4 @@
-function [P,Q,obj,err,iter] = tcpcp(dim,g,GM,GM2,lambda,opts)
+function [P,Q,obj,err,iter] = ctpcp(dim,g,GM,GM2,lambda,opts, i, Lreal, Sreal)
 
 % Tensor Compressive Principal Component Pursuit Algomrith
 %
@@ -55,10 +55,12 @@ L = X;
 S = zeros(dim);
 P = L;
 Q = S;
+m = prod(dim);
 Z1 = zeros(dim);
 Z2 = zeros(dim);
 Z3 = zeros(size(g));
-m = prod(dim);
+
+Xreal = Sreal + Lreal;
 
 iter = 0;
 for iter = 1 : max_iter
@@ -87,7 +89,7 @@ for iter = 1 : max_iter
     if muOnly==1
         dZ3 = GM*(L(:)+S(:))-g;
     else
-        dZ3 = Z3;
+        dZ3 = 0;
     end
     chgP = max(abs(Pk(:)-P(:)));
     chgQ = max(abs(Qk(:)-Q(:)));
@@ -95,12 +97,17 @@ for iter = 1 : max_iter
     if DEBUG
         if iter == 1 || mod(iter, 10) == 0
             obj = tnnP+lambda*norm(Q(:),1);
-            err = norm(dZ1(:))+norm(dZ2(:))+norm(dZ3(:));
+            err = norm(Xreal(:)-L(:)-S(:));
+            % display
             disp(['iter ' num2str(iter) ', mu=' num2str(mu) ...
                     ', obj=' num2str(obj) ', err=' num2str(err)...
                     ', norm(Z1)=' num2str(norm(abs(Z1(:)))) ', norm(Z2)=' num2str(norm(abs(Z2(:))))...
                     ', norm(P)=' num2str(norm(abs(P(:)))) ', norm(Q)=' num2str(norm(abs(Q(:))))...
                     ', norm(L)=' num2str(norm(abs(L(:)))) ', norm(S)=' num2str(norm(abs(S(:))))]); 
+            % write experiments logs    
+            errL = norm(L(:)-Lreal(:),2)/norm(Lreal(:),2);
+            errS = norm(S(:)-Sreal(:),2)/norm(Sreal(:),2);
+            dlmwrite(['err-', num2str(i),'.csv'],[iter, errL, errS, mu, obj, err, chgP, chgQ, chg], 'delimiter',',','-append');
         end
     end
     
@@ -115,7 +122,7 @@ for iter = 1 : max_iter
         Z3 = Z3 + mu*dZ3;
     end
     X = L+S;
-    mu = min(rho*mu,max_mu);    
+    mu = min(rho*mu, max_mu);    
 end
-obj = tnnP+lambda*norm(S(:),1);
-err = norm(dZ1(:))+norm(dZ2(:))+norm(dZ3(:));
+obj = tnnP + lambda * norm(S(:),1);
+err = norm(dZ1(:)) + norm(dZ2(:)) + norm(dZ3(:));

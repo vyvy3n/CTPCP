@@ -1,0 +1,172 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage{CJK}
+\usepackage{amsmath, amsthm, amssymb, upgreek}
+\usepackage{titlesec, titletoc, lastpage}   %%章节标题格式
+\usepackage{ifthen, bbm, syntonly, CJKpunct}
+\usepackage{graphicx, picins, subfigure}
+\usepackage{indentfirst}%%首行缩进
+\usepackage{geometry}   %%设置页边距（页面设置）
+\usepackage{bm}         %%定义粗斜体表示向量
+%%\usepackage{calrsfs}    %%花体大写字母，如余集，幂集，\mathrsfs{P}, 很花
+\usepackage{mathrsfs}
+\usepackage{wasysym}    %%用\varint得到直立积分号
+\usepackage{xcolor}     %%它是 color 宏包的扩充, 预定68种颜色, 支持 pgf 包
+\usepackage{extarrows}  %%长等号, 长箭头
+\usepackage{graphicx}
+\usepackage{graphics}   %%图片设置
+\usepackage{caption}    %%注释设置
+\usepackage{multirow}   %%表格跨行
+\usepackage{booktabs}   %\toprule: book tables
+\begin{CJK*}{GBK}{song}\end{CJK*}   %%设置格式命令里会用到中文，所以要在设置之前放一个空的CJK环境
+
+
+
+%==============设置汉字字体命令 开始=============================
+\newcommand{\song}{\CJKfamily{song}}    %% 宋体  %\upshape直立，汉字不要斜体
+\newcommand{\kai}{\CJKfamily{kai}}      %% 楷体
+\newcommand{\hei}{\CJKfamily{hei}}      %% 黑体
+%==============设置汉字字体命令 结束=============================
+
+%==============设置使用汉字字号命令 开始=============================
+\newcommand{\chuhao}{\fontsize{42pt}{\baselineskip}\selectfont}
+\newcommand{\xiaochuhao}{\fontsize{36pt}{\baselineskip}\selectfont}
+\newcommand{\yihao}{\fontsize{28pt}{\baselineskip}\selectfont}
+\newcommand{\erhao}{\fontsize{21pt}{\baselineskip}\selectfont}
+\newcommand{\xiaoerhao}{\fontsize{18pt}{\baselineskip}\selectfont}
+\newcommand{\sanhao}{\fontsize{15.70pt}{\baselineskip}\selectfont} %% 原为15.75pt, 但用yap打印有问题
+\newcommand{\sihao}{\fontsize{14pt}{\baselineskip}\selectfont}
+\newcommand{\xiaosihao}{\fontsize{12pt}{\baselineskip}\selectfont}
+%==============设置使用汉字字号命令 结束=============================
+
+%==============设置定义，定理，证明 开始=============================
+\newtheoremstyle{mystyle}{00em}{0em}{\kai}{-0.2em}{\hei\bfseries}{}{0.5em}{}
+\theoremstyle{mystyle}
+\newtheorem{definition}{\hskip 1.88em\hei 定义\hskip 0.1em}[section]
+\newtheorem{theorem}{\hskip 1.88em\hei 定理\hskip 0.1em}[section]
+\newtheorem{example}{\hskip 1.88em\hei 例\hskip 0.1em}[section]
+\newtheorem{problem}{\hskip 1.88em\hei 问题\hskip 0.1em}[section]
+
+\newtheorem{proposition}[theorem]{\hskip 1.88em\hei 命题\hskip 0.1em }
+\newtheorem{property}[theorem]{\hskip 1.88em\hei 性质\hskip 0.1em }
+\newtheorem{lemma}[theorem]{\hskip 1.88em\hei 引理\hskip 0.1em }
+\newtheorem{corollary}[theorem]{\hskip 1.88em\hei 推论\hskip 0.1em }
+\newtheorem{axiom}{\hskip 1.88em\hei 公理\hskip 0.1em }[section]
+%==============设置定义，定理，证明 结束=============================
+
+
+%==============设置页面大小位置 开始=====================================
+\setlength\textwidth{160mm} %设置页心宽度
+\setlength\textheight{225mm} %设置页心高度
+\setlength\voffset{0mm} %设置页心垂直偏移量
+%\setlength\hoffset{0mm} %设置页心水平偏移量
+\setlength\oddsidemargin{0mm} %设置奇数页的页心到装订线的距离
+\setlength\evensidemargin{0mm} %设置奇数页的页心到装订线的距离
+%==============设置页面大小位置 结束=====================================
+
+
+%==============章节标题样式 开始=====================================
+%%\titleformat{\chapter}{\centering}{\erhao\hei 第\CJKnumber{\thechapter} 章}{1em}{\erhao\hei}
+%%\titleformat{\section}{\centering}{\textbf{\sanhao\hei\raisebox{1pt}{\S}}\hspace{5pt}\sanhao\hei\thesection\hspace{-12pt}}{1.5em}{\sanhao\hei}
+%==============章节标题样式 结束=====================================
+
+
+%==============设置页眉页脚 开始==============================
+\newpagestyle{MyPgsStylex}
+{\sethead %%[\thepage\backslash\pageref{LastPage}][][\kai\textsl{\upshape 组合数学讨论班\,读书报告\ \raisebox{1pt}{\S}\hspace{0.2em}\thesection\hspace{0.4em}\sectiontitle}]
+{Tianwei Yue}{\kai\textsl{\upshape Research Training Report}}{\thepage\,/\,\pageref{LastPage}}\setfoot[][][]{}{}{}\headrule\setheadrule{0.4pt}}
+%奇数页页眉显示节标题，偶数页页眉显示章标题，\headrule\setheadrule{0.4pt} 设置页眉的横线宽度0.4pt，未设置\headrule
+%==============设置页眉页脚 结束==============================
+
+%%========================文========档========开========始========================
+
+\begin{document}
+\begin{CJK*}{GBK}{song}
+\CJKindent          %%段首缩进设为两个中文字符的宽度
+\CJKtilde           %%CJK*环境会吞掉跟在汉字后面的空格，从而使得源文件中的换行不会在相邻汉字之间产生空白。
+
+\pagenumbering{arabic}      %%页码用阿拉伯数字
+\pagestyle{MyPgsStylex}   %%使用已定义的页眉页脚
+
+\setlength\baselineskip{18pt}   %设置行间距，对于12pt来说是1.5 倍行距
+\setlength{\parskip}{2pt}       %设置段间距
+
+%% 用下面两条命令可以设定displaymath与上下文的间距
+\setlength{\abovedisplayskip}{2pt plus 2pt minus 4pt}
+\setlength{\belowdisplayskip}{2pt plus 2pt minus 4pt}
+
+%%========================以上可以不动, 基本上够用了, 不够再说=====================================
+
+%% 格式一般要求:
+%% 全部用英文标点, 标点后有空格.
+%% 公式不要自动折行, 长公式应独占一行或多行.
+%% 即使是单独的 a, b 等, 也应用\ $a$, $b$ 方式, 注意公式里的字母一般是斜体
+%% 特殊符号如自然对数的底 e, 圆周率 pi 等, 应该用直立方式表示: $\mathrm{e}$, $\uppi$.
+%% 页眉上的 yourname 应在第 73 行的开始处修改
+%% 目前就想到这些, 有问题可以Q我或在群中讨论
+
+%%========================文========档========开========始========================
+% \thispagestyle{empty}   %%首页不要页眉页脚
+% \vspace*{2em}
+
+\title{\Large Improving Generalization in Multimodal Sentiment Analysis by Select-Additive Learning}
+\author{\normalsize 学生： 岳天溦\\ \normalsize 导师： 王~~~~尧}
+\maketitle
+
+\setlength{\oddsidemargin}{ 1cm}  %
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\textwidth}{14cm} \vspace{-.8cm}
+\begin{center}
+\parbox{\textwidth}{{\bf Abstract}:
+abstract}
+\end{center}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setlength{\oddsidemargin}{-.5cm}  %
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\textwidth}{17.00cm}
+\bigskip
+
+\section{Experiments}
+\begin{table}
+\centering  % 表居中
+\caption{TCPCP v.s. TRPCA}
+\begin{tabular}{ccc|cc|cc}\toprule
+~  & ~  & ~  & \multicolumn{2}{l|}{~~~~~~~~~~~~\scriptsize CTPCP}  & \multicolumn{2}{l}{~~~~~~~~~~~~\scriptsize TRPCA}   \\\cline{4-7}
+
+$n$ & $rank_t(\mathcal{\hat{L}})$ & $\|\mathcal{\hat{S}}\|_0$
+& $\frac{\|\mathcal{\hat{L}}_0-\mathcal{L}_0\|_F}{\|\mathcal{\hat{L}}_0\|}$
+& $\frac{\|\mathcal{\hat{S}}_0-\mathcal{S}_0\|_F}{\|\mathcal{\hat{S}}_0\|}$
+& $\frac{\|\mathcal{\hat{L}}_0-\mathcal{L}_0\|_F}{\|\mathcal{\hat{L}}_0\|}$
+& $\frac{\|\mathcal{\hat{S}}_0-\mathcal{S}_0\|_F}{\|\mathcal{\hat{S}}_0\|}$\\\midrule
+
+20 & 2 & 24  & $10^{-3}$ & $10^{-3}$ & $10^{-6}$ & $10^{-6}$ \\
+30 & 3 & 54  & $10^{-3}$ & $10^{-3}$ & $10^{-6}$ & $10^{-6}$ \\
+50 & 3 & 150 & $10^{-2}$ & $10^{-2}$ & $10^{-6}$ & $10^{-6}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+\begin{tabular}{cccccccc}\hline
+$n$ & $rank_t(\mathcal{\hat{L}})$ & $\|\mathcal{\hat{S}}\|_0$
+& $\frac{\|\mathcal{\hat{L}}_0-\mathcal{L}_0\|_F}{\|\mathcal{\hat{L}}_0\|}$
+& $\frac{\|\mathcal{\hat{S}}_0-\mathcal{S}_0\|_F}{\|\mathcal{\hat{S}}_0\|}$
+& $\frac{\|\mathcal{\hat{L}}_0-\mathcal{L}_0\|_F}{\|\mathcal{\hat{L}}_0\|}$
+& $\frac{\|\mathcal{\hat{S}}_0-\mathcal{S}_0\|_F}{\|\mathcal{\hat{S}}_0\|}$
+& runtime (s) \\\hline
+20 & 2 & 120 & 4.94$e$-2 & 4.75$e$-2 & 1.66$e$-6 & 1.24$e$-6 & 638 \\
+\hline
+\end{tabular}
+
+\end{table}
+
+%%=================================================================================================
+
+\newpage
+\bibliographystyle{unsrt}
+\bibliography{ref}
+%%========================文========档========结========束========================
+\newpage    %%如缺此行, 末页页眉将显示异常
+\end{CJK*}
+\end{document}

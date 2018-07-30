@@ -1,9 +1,9 @@
 addpath(genpath(cd))
 clear
 
-Rho = [1.01, 1.005];
+Rho = [1.005];
 N = [30];
-Ratio = [0.1, 0.2];
+Ratio = [0.2];
 SR = [0.7, 0.8];
 
 rng(666)

@@ -1,0 +1,261 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{savesym}
+\usepackage{stmaryrd}
+\usepackage{amsfonts}
+\usepackage{pifont}
+\usepackage{bbding}
+\usepackage{amssymb}
+
+\usepackage{CJK}
+\usepackage{amsmath, amsthm, amssymb, upgreek}
+\usepackage{titlesec, titletoc, lastpage}   %%章节标题格式
+\usepackage{ifthen, bbm, syntonly, CJKpunct}
+\usepackage{graphicx, picins, subfigure}
+\usepackage{indentfirst}%%首行缩进
+\usepackage{geometry}   %%设置页边距
+\usepackage{bm}         %%定义粗斜体表示向量
+%\usepackage{calrsfs}    %%花体大写字母,如余集,幂集,\mathrsfs{P}, 很花
+\usepackage{wasysym}    %%用\varint得到直立积分号
+\usepackage{xcolor}     %%它是 color 宏包的扩充, 预定68 种颜色, 支持 pgf 包
+\usepackage{extarrows}  %%长等号, 长箭头
+\usepackage{mathrsfs}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{float}
+\usepackage{array}
+
+\usepackage{caption}                % 这四行插入algorithm代码
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}     % 这四行插入algorithm代码
+
+\makeatletter
+\newcommand{\rmnum}[1]{\romannumeral #1}
+\newcommand{\Rmnum}[1]{\expandafter\@slowromancap\romannumeral #1@}
+\makeatother
+
+\begin{CJK*}{GBK}{song}\end{CJK*}   %%设置格式命令里会用到中文,所以要在设置之前放一个空的CJK 环境
+
+
+
+%==============设置汉字字体命令 开始=============================
+\newcommand{\song}{\CJKfamily{song}}    %% 宋体  %\upshape 直立,汉字不要斜体
+\newcommand{\kai}{\CJKfamily{kai}}      %% 楷体
+\newcommand{\hei}{\CJKfamily{hei}}      %% 黑体
+%==============设置汉字字体命令 结束=============================
+
+%==============设置使用汉字字号命令 开始=============================
+\newcommand{\chuhao}{\fontsize{42pt}{\baselineskip}\selectfont}
+\newcommand{\xiaochuhao}{\fontsize{36pt}{\baselineskip}\selectfont}
+\newcommand{\yihao}{\fontsize{28pt}{\baselineskip}\selectfont}
+\newcommand{\erhao}{\fontsize{21pt}{\baselineskip}\selectfont}
+\newcommand{\xiaoerhao}{\fontsize{18pt}{\baselineskip}\selectfont}
+\newcommand{\sanhao}{\fontsize{15.70pt}{\baselineskip}\selectfont} %% 原为15.75pt, 但用yap打印有问题
+\newcommand{\sihao}{\fontsize{14pt}{\baselineskip}\selectfont}
+\newcommand{\xiaosihao}{\fontsize{12pt}{\baselineskip}\selectfont}
+%==============设置使用汉字字号命令 结束=============================
+
+%==============设置定义,定理,证明 开始=============================
+\newtheoremstyle{mystyle}{00em}{0em}{\kai}{-0.2em}{\hei\bfseries}{}{0.5em}{}
+\theoremstyle{mystyle}
+\newtheorem{definition}{\hskip 1.88em\hei Def.\hskip 0.1em}[section]
+\newtheorem{theorem}{\hskip 1.88em\hei Theorem\hskip 0.1em}[section]
+\newtheorem{example}{\hskip 1.88em\hei Example\hskip 0.1em}[section]
+\newtheorem{problem}{\hskip 1.88em\hei Problem\hskip 0.1em}[section]
+
+\newtheorem{proposition}[theorem]{\hskip 1.88em\hei Proposition\hskip 0.1em }
+\newtheorem{addition}[theorem]{\hskip 1.88em\hei Addition\hskip 0.1em }
+\newtheorem{property}[theorem]{\hskip 1.88em\hei Property\hskip 0.1em }
+\newtheorem{lemma}[theorem]{\hskip 1.88em\hei Lemma\hskip 0.1em }
+\newtheorem{corollary}[theorem]{\hskip 1.88em\hei Corollary\hskip 0.1em }
+\newtheorem{axiom}{\hskip 1.88em\hei Axiom\hskip 0.1em }[section]
+%==============设置定义,定理,证明 结束=============================
+
+
+%==============设置页面大小位置 开始=====================================
+\setlength\textwidth{160mm} %设置页心宽度
+\setlength\textheight{225mm} %设置页心高度
+\setlength\voffset{0mm} %设置页心垂直偏移量
+%\setlength\hoffset{0mm} %设置页心水平偏移量
+\setlength\oddsidemargin{0mm} %设置奇数页的页心到装订线的距离
+\setlength\evensidemargin{0mm} %设置奇数页的页心到装订线的距离
+%==============设置页面大小位置 结束=====================================
+
+
+%==============章节标题样式 开始=====================================
+%%\titleformat{\chapter}{\centering}{\erhao\hei 第\CJKnumber{\thechapter}章}{1em}{\erhao\hei}
+\titleformat{\section}{\centering}{\textbf{\sanhao\hei\raisebox{1pt}{\S}}\hspace{5pt}\sanhao\hei\thesection\hspace{-12pt}}{1.5em}{\sanhao\hei}
+%==============章节标题样式 结束=====================================
+
+
+%==============设置页眉页脚 开始==============================
+\newpagestyle{MyPgsStylex}
+{\sethead %%[\thepage\backslash\pageref{LastPage}][][\kai\textsl{\upshape 组合数学讨论班\,读书报告\ \raisebox{1pt}{\S}\hspace{0.2em}\thesection\hspace{0.4em}\sectiontitle}]
+{Tianwei Yue}{\kai\textsl{\upshape CMSE 820 HW$07$}}{\thepage\,/\,\pageref{LastPage}}\setfoot[][][]{}{}{}\headrule\setheadrule{0.4pt}}
+%奇数页页眉显示节标题,偶数页页眉显示章标题,\headrule\setheadrule{0.4pt}设置页眉的横线宽度0.4pt, 未设置\headrule
+%==============设置页眉页脚 结束==============================
+
+
+
+%%========================文======== 档======== 开========始========================
+
+\begin{document}
+\begin{CJK*}{GBK}{song}
+\CJKindent          %%段首缩进设为两个中文字符的宽度
+\CJKtilde           %%CJK*环境会吞掉跟在汉字后面的空格,从而使得源文件中的换行不会在相邻汉字之间产生空白.
+
+
+\pagenumbering{arabic}      %%页码用阿拉伯数字
+\pagestyle{MyPgsStylex}   %%使用已定义的页眉页脚
+
+\setlength\baselineskip{24pt}   %设置行间距,对于12pt 来说是1.5倍行距
+\setlength{\parskip}{2pt}       %设置段间距
+
+%% 用下面两条命令可以设定displaymath与上下文的间距
+\setlength{\abovedisplayskip}{2pt plus 2pt minus 4pt}
+\setlength{\belowdisplayskip}{2pt plus 2pt minus 4pt}
+
+
+%%========================以上可以不动, 基本上够用了, 不够再说=====================================
+
+%% 格式一般要求:
+%% 全部用英文标点, 标点后有空格.
+%% 公式不要自动折行, 长公式应独占一行或多行.
+%% 即使是单独的 a, b 等, 也应用\ $a$, $b$ 方式, 注意公式里的字母一般是斜体
+%% 特殊符号如自然对数的底 e, 圆周率 pi 等, 应该用直立方式表示: $\mathrm{e}$, $\uppi$.
+%% 页眉上的 yourname 应在第 73 行的开始处修改
+%% 目前就想到这些, 有问题可以Q我或在群中讨论
+
+
+
+
+%%========================文======== 档======== 开========始========================
+\thispagestyle{empty}   %%首页不要页眉页脚
+
+
+\bigskip
+%%=================================================================================================
+\noindent TCPCP problem:
+\begin{equation}\label{e1}
+\min_{\mathcal{L},\mathcal{S}}\|\mathcal{L}\|_*+\lambda \|\mathcal{S}\|_1, s.t. P_{\Omega}(\mathcal{S+L})=P_{\Omega}\mathcal{X}_0.
+\end{equation}
+
+Rewrite the constraint into $G\mathcal{(S(:)+L(:))}=G\mathcal{X}_0(:)=g$, then we want to solve the following optimization problem,
+\begin{equation}\label{e2}
+\min_{\mathcal{L},\mathcal{S}}\|\mathcal{L}\|_*+\lambda \|\mathcal{S}\|_1+\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2.
+\end{equation}
+
+In order to solve this problem by ADMM, we introduce $\mathcal{P}, \mathcal{Q}$ and then obtain the following optimization problem,
+%\begin{equation}\label{e3}
+%\min_{\mathcal{S},\mathcal{L},\mathcal{P},\mathcal{Q}}\|\mathcal{P}
+%\|_*+\lambda \|\mathcal{Q}\|_1+\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2,
+%\quad s.t.\, \mathcal{P=L,~Q=S}.
+%\end{equation}
+\begin{equation}\label{e3}
+\min_{\mathcal{S},\mathcal{L},\mathcal{P},\mathcal{Q}}\|\mathcal{P}
+\|_*+\lambda \|\mathcal{Q}\|_1,
+\quad s.t.\, \mathcal{P=L,~Q=S},~G\mathcal{(S(:)+L(:))}=g.
+\end{equation}
+
+
+The Lagrangian is augmented as
+%\begin{align}
+%\mathcal{L}_{\rho_1,\rho_2}(\mathcal{S},\mathcal{L},\mathcal{P},\mathcal{Q})
+%&=\|P\|_*+\lambda \|\mathcal{Q}\|_1+\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2\\
+%&+\frac{\rho_1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_{F}^2\\
+%&+\frac{\rho_2}{2}\|\mathcal{S-Q}+\rho_2^{-2}\mathcal{Z}_2\|_{F}^2
+%\end{align}
+\begin{align}
+\mathcal{L}_{\rho_1,\rho_2}(\mathcal{S},\mathcal{L},\mathcal{P},\mathcal{Q})
+&=\|P\|_*+\lambda \|\mathcal{Q}\|_1\\
+&+\frac{\rho_1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_{F}^2\\
+&+\frac{\rho_2}{2}\|\mathcal{S-Q}+\rho_2^{-1}\mathcal{Z}_2\|_{F}^2\\
+&+\frac{\rho_3}{2}\|G\mathcal{(S(:)+L(:))}-g+\rho_3^{-1}\mathcal{Z}_3\|_{F}^2
+\end{align}
+
+Each of the above sub-problems can be solved as the followings,
+%\begin{align}
+%\mathcal{P}
+%&=arg\min_{\mathcal{P}}\frac{1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_F^2
+% +\frac{1}{\rho_1}\|P\|_*\notag\\
+%&=D_{1/\rho_1}(\mathcal{L}+\rho_1^{-1}\mathcal{Z}_1)\\
+%\mathcal{Q}
+%&=arg\min_{\mathcal{Q}}\frac{1}{2}\|\mathcal{S-Q}+\rho_2^{-1}\mathcal{Z}_1\|_F^2
+% +\frac{\lambda}{\rho_2}\|Q\|_1\notag\\
+%&=S_{\lambda/\rho_2}(\mathcal{S}+\rho_2^{-1}\mathcal{Z}_2)\\
+%\mathcal{L}
+%&=arg\min_{\mathcal{L}}\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2
+% +\frac{\rho_1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_{F}^2\notag\\
+%&=(\mu G^TG+\rho_1I)^{-1}(\mu G^T g+\rho_1\mathcal{P}(:)-\mathcal{Z}_1
+% -\mu G^TG\mathcal{S}(:))\\
+%\mathcal{S}
+%&=arg\min_{\mathcal{S}}\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2
+% +\frac{\rho_2}{2}\|\mathcal{S-Q}+\rho_2^{-1}\mathcal{Z}_2\|_{F}^2\notag\\
+%&=(\mu G^TG+\rho_2I)^{-1}(\mu G^T g+\rho_2\mathcal{Q}(:)-\mathcal{Z}_2
+% -\mu G^TG\mathcal{L}(:))
+%\end{align}
+\begin{align}
+\mathcal{P}
+&=arg\min_{\mathcal{P}}\frac{1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_F^2
+ +\frac{1}{\rho_1}\|P\|_*\notag\\
+&=D_{1/\rho_1}(\mathcal{L}+\rho_1^{-1}\mathcal{Z}_1)\\
+\mathcal{Q}
+&=arg\min_{\mathcal{Q}}\frac{1}{2}\|\mathcal{S-Q}+\rho_2^{-1}\mathcal{Z}_1\|_F^2
+ +\frac{\lambda}{\rho_2}\|Q\|_1\notag\\
+&=S_{\lambda/\rho_2}(\mathcal{S}+\rho_2^{-1}\mathcal{Z}_2)\\
+\mathcal{L}
+&=arg\min_{\mathcal{L}}
+\frac{\rho_1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_{F}^2+
+\frac{\rho_3}{2}\|G\mathcal{(S(:)+L(:))}-g+\rho_3^{-1}\mathcal{Z}_3\|_{F}^2\notag\\
+&=(\rho_3 G^TG+\rho_1I)^{-1}
+(\rho_3 G^T g+\rho_1\mathcal{P}(:)-\mathcal{Z}_1-\rho_3 G^TG\mathcal{S}(:)-G^TZ_3)\\
+\mathcal{S}
+&=arg\min_{\mathcal{S}}
+\frac{\rho_2}{2}\|\mathcal{S-Q}+\rho_2^{-1}\mathcal{Z}_2\|_{F}^2+
+\frac{\rho_3}{2}\|G\mathcal{(S(:)+L(:))}-g+\rho_3^{-1}\mathcal{Z}_3\|_{F}^2\notag\\
+&=(\rho_3 G^TG+\rho_1I)^{-1}
+(\rho_3 G^T g+\rho_2\mathcal{Q}(:)-\mathcal{Z}_2-\rho_3 G^TG\mathcal{L}(:)-G^TZ_3)
+\end{align}
+
+Solve this by ADMM by introducing two dual problems, the algorithm can be shown as follows,
+%\begin{algorithm}[!htbp]
+%  \caption*{\textbf{Algorithm: Solve TCPCP by ADMM}}
+%  \begin{algorithmic}[1]
+%    \State Initialization $\mathcal{S}=\mathcal{L}=\mathcal{P}=\mathcal{Q}=\mathcal{Z}_1=\mathcal{Z}_2=zeros(dim(X_0))$
+%    \For{$k=1,2,\cdots$}
+%        \State update $\mathcal{P}$: $\mathcal{P}=D_{\frac{1}{\rho_1}}(\mathcal{L}+\rho_1^{-1}\mathcal{Z}_1)$
+%        \State update $\mathcal{Q}$: $\mathcal{P}=S_{\frac{\lambda}{\rho_2}}(\mathcal{S}+\rho_2^{-1}\mathcal{Z}_2)$
+%        \State update $\mathcal{L}$: $\mathcal{L}(:)$ = $(\mu G^TG+\rho_1I)^{-1}
+%                                                (\mu G^T g+\rho_1\mathcal{P}(:)-\mathcal{Z}_1-\mu G^TG\mathcal{S}(:))$
+%        \State update $\mathcal{S}$: $\mathcal{S}(:)$ = $(\mu G^TG+\rho_1I)^{-1}
+%                                                (\mu G^T g+\rho_2\mathcal{Q}(:)-\mathcal{Z}_2-\mu G^TG\mathcal{L}(:))$
+%        \State dual update $\mathcal{Z}_1$: $\mathcal{Z}_1=\mathcal{Z}_1+\rho_1*(\mathcal{L-P})$
+%        \State dual update $\mathcal{Z}_2$: $\mathcal{Z}_2=\mathcal{Z}_2+\rho_2*(\mathcal{S-Q})$
+%    \EndFor
+%  \end{algorithmic}
+%\end{algorithm}
+
+\begin{algorithm}[!htbp]
+  \caption*{\textbf{Algorithm: Solve TCPCP by ADMM}}
+  \begin{algorithmic}[1]
+    \State Initialization $\mathcal{S}=\mathcal{L}=\mathcal{P}=\mathcal{Q}=\mathcal{Z}_1=\mathcal{Z}_2=zeros(dim(X_0))$
+    \For{$k=1,2,\cdots$}
+        \State update $\mathcal{P}$: $\mathcal{P}=D_{\frac{1}{\rho_1}}(\mathcal{L}+\rho_1^{-1}\mathcal{Z}_1)$
+        \State update $\mathcal{Q}$: $\mathcal{P}=S_{\frac{\lambda}{\rho_2}}(\mathcal{S}+\rho_2^{-1}\mathcal{Z}_2)$
+        \State update $\mathcal{L}$: $\mathcal{L}(:)$ = $(\rho_3 G^TG+\rho_1I)^{-1}
+                                                (\rho_3 G^T g+\rho_1\mathcal{P}(:)-\mathcal{Z}_1-\rho_3 G^TG\mathcal{S}(:)-G^TZ_3)$
+        \State update $\mathcal{S}$: $\mathcal{S}(:)$ = $(\rho_3 G^TG+\rho_1I)^{-1}
+                                                (\rho_3 G^T g+\rho_2\mathcal{Q}(:)-\mathcal{Z}_2-\rho_3 G^TG\mathcal{L}(:)-G^TZ_3)$
+        \State dual update $\mathcal{Z}_1$: $\mathcal{Z}_1=\mathcal{Z}_1+\rho_1*(\mathcal{L-P})$
+        \State dual update $\mathcal{Z}_2$: $\mathcal{Z}_2=\mathcal{Z}_2+\rho_2*(\mathcal{S-Q})$
+        \State dual update $\mathcal{Z}_3$: $\mathcal{Z}_3=\mathcal{Z}_3+\rho_3*(G\mathcal{(S(:)+L(:))}-g)$
+    \EndFor
+  \end{algorithmic}
+\end{algorithm}
+
+
+%%========================文======== 档======== 结========束========================
+\newpage    %%如缺此行, 末页页眉将显示异常
+\end{CJK*}
+\end{document}

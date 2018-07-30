@@ -1,0 +1,1121 @@
+\documentclass[journal,transmag]{IEEEtran}
+\hyphenation{op-tical net-works semi-conduc-tor}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{caption}                % 这四行插入algorithm代码
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}     % 这四行插入algorithm代码
+%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Thoerem}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{proposition}{Proposition}[section]
+\theoremstyle{plain}
+\renewcommand\thesection{\arabic{section}}
+\begin{document}
+
+\title{Compressive tensor principal component pursuit using t-SVD}
+\author{\IEEEauthorblockN{Haodong Sun\IEEEauthorrefmark{1}, Tianwei Yue\IEEEauthorrefmark{2}, Yao Wang\IEEEauthorrefmark{3,$\ast$}, Shaobo Lin\IEEEauthorrefmark{4}}
+% \IEEEauthorblockA{\IEEEauthorrefmark{1}\IEEEauthorrefmark{2}}
+}
+
+% The paper headers
+% \markboth{Journal of \LaTeX\ Class Files,~Vol.~14, No.~8, August~2015}%
+% {Shell \MakeLowercase{\textit{et al.}}: Bare Demo of IEEEtran.cls for IEEE Transactions on Magnetics Journals}
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+\center{Abstract}
+\end{abstract}
+\begin{abstract}
+This paper considers the problem of recovering a data tensor, which is the superposition of a low-rank component and a sparse component, from a small set of linear measurements. The interest in this problem is motivated by applications in compressed sensing of high-dimensional data with low-complexity structures. Our model is based on tensor-Singular Value Decomposition (t-SVD) and its induced tensor nuclear norm. In fact, we can derive a new notion of tensor rank by this factorization, denoted as tensor tubal rank. In this work, we prove that under suitable assumptions we can recover each component of the target tensor exactly by solving a convex problem with overwhelming probability. In the end, we show the result of numerical experiments conducted on
+several real data sets to illustrate the merit of our model.
+\end{abstract}
+
+%\begin{IEEEkeywords}
+%IEEE, IEEEtran, IEEE Transactions on Magnetics, journal, \LaTeX, magnetics, paper, template.
+%\end{IEEEkeywords}
+}
+
+
+\maketitle
+
+
+\IEEEdisplaynontitleabstractindextext
+% \IEEEdisplaynontitleabstractindextext has no effect when using
+% compsoc or transmag under a non-conference mode.
+
+
+
+% For peer review papers, you can put extra information on the cover
+% page as needed:
+% \ifCLASSOPTIONpeerreview
+% \begin{center} \bfseries EDICS Category: 3-BBND \end{center}
+% \fi
+%
+% For peerreview papers, this IEEEtran command inserts a page break and
+% creates the second title. It will be ignored for other modes.
+\IEEEpeerreviewmaketitle
+
+
+
+\section{Introduction}
+\IEEEPARstart{R}{ecently} there has been a tremendous amount of interest in the problem of exploiting low-complexity structure in data lying in high-dimensional space, such as sparse signals or low-rank structures. Data in the form of multidimensional array is also referred as tensor. Naturally, we represent data in this way to avoid the loss of structure information. In this work, we mainly focus on the third order tensor. The huge progress made in compressed sensing has showed that it is possible to perfectly recover low-complexity signals from a small set of partially sampled measurements or corrupted observations. Generally, the tensor recovery is achieved by solving a optimal problem whose objective function is a weighted combination of several regularizations revealing the corresponding low-complexity properties. In fact, for exploiting low-rank structure, the strategy of recovery greatly relies on algebraic decomposition methods, such as CANDECOMP/PARAFAC(CP) decomposition$\cite{KB}$ and Tucker decomposition$\cite{KB}$. Here we use t-SVD proposed in $\cite{KBH}$ due to its good properties.
+
+Robust Principle Component Analysis (RPCA) proposed in $\cite{CLM}$ is an efficient algorithm with theoretical guarantee for exact recovery. Suppose that we have a data matrix $X\in \mathbb{R}^{n_1\times n_2}$ which is the superposition of a low-rank component $L_0$ and a sparse component $S_0$. It has been proved in $\cite{CLM}$ that if $L_0$ meet some incoherent conditions and $S_0$ satisfies some probabilistic assumptions, one can exactly recover both components with high probability by solving a convex program called Principal Component Pursuit (PCP):
+\begin{equation}
+\min_{L,S}||L||_{*}+\lambda ||S||_1, \quad s.t.\, X=L+S,
+\end{equation}
+where $||L||_*$ denotes the nuclear norm and $||S||_1$ denotes the $l$-1 norm, $\lambda=1/\sqrt{\max(n_1,n_2)}$. By the standard Alternating Direction Method of Multipliers (ADMM), the PCP can be solved easily in polynomial time. However, this method can only be used to manipulate two-dimensional data. To overcome this shortcoming, Tensor Robust Principle Component Analysis (TRPCA) was proposed in $\cite{LFC}$. Moreover, in many scenarios it is meaningful to develop models recovering low-rank and sparse components from incomplete measurements. The compressive RPCA was studied in $\cite{WGM}$ for two-dimensional data. Based on these works, it is interesting to consider the compressive RPCA problem for third order tensor.
+
+In this paper, we study the Tensor Compressive Principal Component Pursuit (TCPCP). Consider we have a third order tensor $\mathcal{X}\in \mathbb{R}^{n_1\times n_2 \times n_3}$ ($n_1=n_2$) such that $\mathcal{X}=\mathcal{L}_0+\mathcal{S}_0$ where $\mathcal{L}_0$ is the low-rank component and $\mathcal{S}_0$ is the sparse component. We prove that under some assumptions on $\mathcal{L}_0$, $\mathcal{S}_0$ and the dimension of sampling space, one can exactly recover both low-rank and sparse components from undersampled measurements by solving the following optimal problem:
+\begin{equation} \label{TCPCP}
+\min_{\mathcal{L},\mathcal{\mathcal{S}}} ||\mathcal{L}||_*+\lambda ||\mathcal{S}||_1, \quad s.t. \,\mathcal{P}_Q(\mathcal{L}_0+\mathcal{S}_0)=\mathcal{P}_Q(\mathcal{L}+\mathcal{S}),
+\end{equation}
+where $Q$ is randomly chosen subspace of $\mathbb{R}^{n_1\times n_2 \times n_3}$, $\mathcal{P}_Q$ is the sampling operator, $\mathcal{L}_0,\mathcal{S}_0$ are low-rank and sparse components respectively. The tensor nuclear norm in this model is defined based on t-SVD factorization.
+
+\subsection{Related Work}
+
+\subsubsection{Tensor Principle Component Analysis using t-SVD}
+Consider $\mathcal{X}\in \mathbb{R}^{n_1\times n_2 \times n_3}$ with $n_1 \ge n_2$. Suppose that $\mathcal{X}$ can be decomposed as the sum of a low-rank tensor $\mathcal{L}_0$ and a sparse tensor $\mathcal{S}_0$. $\cite{LFC}$ tries to recover both components by solving the following program called Tensor PCP (TPCP):
+\begin{equation}
+\min_{\mathcal{L},\mathcal{\mathcal{S}}} ||\mathcal{L}||_*+\lambda ||\mathcal{S}||_1, \quad s.t. \,\mathcal{X}=\mathcal{L}+\mathcal{S},
+\end{equation}
+ where $\lambda=1/\sqrt{n_1 n_3}$. The tensor nuclear norm here is induced by t-SVD.
+
+In $\cite{LFC}$ the authors show that for $\mu$-incoherent $\mathcal{L}_0$ with tubal rank on the order of $n_2 n_3/\mu(\log n_1 n_3)^2$ and $\mathcal{S}_0$ whose number of nonzero entries is on the order of $n_1 n_2 n_3$, the exact recovery is guaranteed with overwhelming probability. Similar to $\cite{CLM}$, they make an assumption that the locations of nonzero entries of $\mathcal{S}_0$ are randomly distributed. Note that when $n_3$ is equal to 1, the TRPCA case reduces to RPCA case. So we can view TRPCA as an extension of RPCA. This property is closed related with t-SVD and we will introduce its conception and properties later.
+\\
+\subsubsection{Compressive Principle Component Pursuit}
+Let $L_0, S_0\in \mathbb{R}^{n_1\times n_2}$ with $n_1\ge n_2$. Suppose $L_0$ is $\mu$-incoherent and its rank is on the order of $n_2/\mu log^2 n_1$, and the sparsity of $S_0$ is on the order of $n_1 n_2$. Similarly we assume that the entries in support set of $S_0$ are randomly distributed.
+
+$\cite{WGM}$ studies the following convex program called Compressive Principle Component Pursuit:
+\begin{equation}
+\min_{L,S}||L||_{*}+\lambda ||S||_1, \quad s.t.\, D=P_Q(L+S),
+\end{equation}
+where $Q$ is a subspace of $\mathbb{R}^{n_1\times n_2}$, $P_Q$ is the sampling operator, $\lambda=1/\sqrt{n_1}$. With the assumptions above, $\cite{WGM}$ gives a tight bound on the number of measurements needed to recover $(L_0, S_0)$ from $D$ by solving CPCP. This bound is on the order of $(\rho n_1 n_2 + n_1 r)\cdot \log^2 n_1$, where $\rho$ is the fraction of nonzero entries of $S_0$, $r$ is the rank of $L_0$. The bound is closely related to the intrinsic degrees of freedom in $(L_0, S_0)$.
+\subsection{Organization of the Paper}
+The rest of this paper is organized as follows. Section 2 introduces some notations and preliminaries. We show the main result in section 3 and delay the proof to section 4. In section 5 we report the results of several experiments. Finally we conclude the whole work and outline future research.
+\section{Notations and Preliminaries}
+Before the main part of this article, we firstly introduce the notations used throughout the paper and some basic definitions and theorems about tensor.
+
+In this paper, we denote tensors by Euler script letter, e.g., $\mathcal{A}$. Matrices are denoted by capital letters, e.g., $A$. We denote vectors by boldface lowercase letters, e.g., $\textbf{a}$. Scalars are denoted by lowercase letters, e.g., $a$. For a third order tensor $\mathcal{A}\in \mathbb{C}^{n_1\times n_2\times n_3}$, its $(i,j,k)$-th entry is denoted as $\mathcal{A}_{ijk}$ or $a_{ijk}$. We use the MatLab notation $\mathcal{A}(i,:,:), \mathcal{A}(:,i,:), \mathcal{A}(:,:,i)$ to denote the $i$-th horizontal, lateral and frontal slice of tensor. Moreover, the frontal slice is also denoted as $A^{(i)}$. We denote $\mathcal{A}(i,j,:)$ as the tube of tensor. Tr($\cdot$) denotes the matrix trace. The inner product of two matrices is $\langle A,B\rangle = Tr(A^*B)$. The inner product of $\mathcal{A}$ and $\mathcal{B}$ in $\mathbb{C}^{n_1 \times n_2 \times n_3}$ is $\langle\mathcal{A},\mathcal{B}\rangle=\sum_1^{n_3}\langle A^{(i)},B^{(i)}\rangle$.
+
+For $\mathcal{A}\in\mathbb{R}^{n_1\times n_2 \times n_3}$, with the matlab command $\tt{fft}$, we use $\bar{\mathcal{A}}$ to denote the result of discrete Fourier transform of $\mathcal{A}$ along the third dimension, i.e., $\bar{\mathcal{A}}=\tt{fft}(\mathcal{A},[],3)$.
+\\
+\begin{definition}
+(Block diagonal matrix) $\bar{A}$ denotes a block diagonal matrix, i.e.,
+\[ \bar{A}=\tt{bdiag}(\bar{\mathcal{A}})=
+\begin{bmatrix}
+\bar{A}^{(1)} & & & \\
+& \bar{A}^{(2)} & &\\
+& & \ddots & \\
+& & & \bar{A}^{(n_3)} \\
+\end{bmatrix}.
+\]
+\end{definition}
+
+\begin{definition}
+(Block circulant matrix)
+For a tensor $\mathcal{A}\in \mathbb{R}^{n_1\times n_2 \times n_3}$, its block circulant matrix is defined as following,
+\[\tt{bcirc}(\mathcal{A})=
+\begin{bmatrix}
+A^{(1)} & A^{(n_3)} & \cdots & A^{(2)} \\
+A^{(2)} & A^{(1)} & \cdots & A^{(3)} \\
+\vdots & \vdots & \ddots & \vdots \\
+A^{(n_3)} & A^{(n_3-1)} & \cdots & A^{(1)} \\
+\end{bmatrix}.
+\]
+We define the operator
+\[
+\tt{unfold}(\mathcal{A})=
+\begin{bmatrix}
+A^{(1)} \\
+A^{(2)} \\
+\vdots \\
+A^{(n_3)} \\
+\end{bmatrix},
+\tt{fold}(\tt{unfold}(\mathcal{A}))=\mathcal{A}.
+\]
+\end{definition}
+
+\begin{definition} (T-product)
+For $\mathcal{A}\in \mathbb{R}^{n_1 \times n_2 \times n_3},\mathcal{B}\in \mathbb{R}^{n_2\times l \times n_3}$, the t-product $\mathcal{A}*\mathcal{B}$ is defined to be:
+\begin{equation}
+\mathcal{A}*\mathcal{B}=\tt{fold}(\tt{bcirc(\mathcal{A})\cdot \tt{unfold}(\mathcal{B})}).
+\end{equation}
+\end{definition}
+Note that when $n_3=1$ tensor product reduces to matrix product.
+
+\begin{definition} (Tensor transpose) The conjugate transpose of a tensor $\mathcal{A} \in \mathbb{R}^{n_1 \times n_2 \times n_3}$ is the $n_2 \times n_1 \times n_3$ tensor $\mathcal{A}^*$ obtained by conjugate transposing each of the frontal slice and then reversing the order of transposed frontal slices 2 through $n_3$.
+\end{definition}
+
+\begin{definition} (Identity tensor) The identity tensor $\mathcal{I} \in\mathcal{I}\in \mathbb{R}^{n\times n \times n_3}$ is the tensor whose frontal slice is the $n\times n$ identity matrix and whose other frontal slices are all zeros.
+\end{definition}
+
+\begin{definition} (Orthogonal tensor) A tensor $\mathcal{Q}\in \mathbb{R}^{n\times n\times n_3}$ is orthogonal if it satisfies
+\begin{equation}
+\mathcal{Q}^* * \mathcal{Q} =\mathcal{Q} * \mathcal{Q}^* = \mathcal{I}.
+\end{equation}
+\end{definition}
+
+\begin{definition} (F-diagonal tensor) A tensor is called f-diagonal if each of its frontal slices is a diagonal matrix.
+\end{definition}
+
+\begin{theorem} (T-SVD) For $\mathcal{A}\in \mathbb{R}^{n_1 \times n_2 \times n_3}$, it can be factored as
+\begin{equation}
+\mathcal{A}=\mathcal{U}*\mathcal{S}*\mathcal{V}^*,
+\end{equation}
+where $\mathcal{U}\in\mathbb{R}^{n_1\times n_1\times n_3},\mathcal{V}\in \mathbb{R}^{n_2\times n_2\times n_3}$ are orthogonal, and $\mathcal{S}\in \mathbb{R}^{n_1\times n_2\times n_3}$ is f-diagonal.
+\end{theorem}
+Note that
+\begin{equation}
+(F_{n_3} \bigotimes I_{n_1} )\cdot \tt{bcirc}\it(\mathcal{A})\cdot (F^{-1}_{n_3}\bigotimes I_{n_2})=\bar{A},
+\end{equation}
+where $F_{n_3}$ denotes the $n_3\times n_3$ Discrete Fourier Transform matrix and $\bigotimes$ denotes Kronecker product. Based on this key property, we can compute tensor SVD efficiently based on matrix SVD in the Fourier domain. One can perform the matrix SVD on each frontal slice of $\bar{\mathcal{A}}$, i.e., $\bar{A}^{(i)}=\bar{U}^{(i)}\bar{S}^{(i)}\bar{V}^{(i)*}$, where $\bar{U}^{(i)},\bar{S}^{(i)},\bar{V}^{(i)}$ are frontal slices of $\bar{\mathcal{U}},\bar{\mathcal{S}},\bar{\mathcal{V}}$ respectively.Equivalently, $\bar{A}=\bar{U}\bar{S}\bar{V}^*$. After performing $\tt{ifft}$ along the third dimension, we get that $\mathcal{U}=\tt{ifft}(\bar{\mathcal{U}},[],3),\mathcal{S}=\tt{ifft}(\bar{\mathcal{S}},[],3),\mathcal{V}=\tt{ifft}(\bar{\mathcal{V}},[],3)$.
+
+\begin{definition} (Tensor multi rank and tubal rank) The multi rank of a tensor $\mathcal{A}\in \mathbb{R}^{n_1\times n_2\times n_3}$ is a vector $r\in \mathbb{R}^{n_3}$ with its i-th entry as the rank of the i-th frontal slice of $\bar{\mathcal{A}}$, i.e., $r_i=rank(\bar{A}^{(i)})$. The tubal rank $rank_t(\mathcal{A})$ is the number of nonzero singular tubes of $\mathcal{S}$ where $\mathcal{S}$ is from the t-SVD of $\mathcal{A}=\mathcal{U}*\mathcal{S}*\mathcal{V}^*$.
+\begin{equation}
+rank_t(\mathcal{A})=\# \{i:\mathcal{S}(i,i,:)\}=\max_i r_i.
+\end{equation}
+\end{definition}
+
+\begin{definition} (Tensor nuclear norm) For a tensor $\mathcal{A}\in \mathbb{R}^{n_1\times n_2\times n_3}$, its nuclear norm $||\mathcal{A}||_*$ is defined as the average of the nuclear norm of all the frontal slices of $\bar{\mathcal{A}}$, i.e.,
+\[ ||\mathcal{A}||_*:=\frac{1}{n_3}\sum_{i=1}^{n_3}||\bar{A}^{(i)}||_*.\]
+\end{definition}
+Note that
+\begin{equation}
+\begin{split}
+&||\mathcal{A}||_*=\frac{1}{n_3}\sum^{n_3}_{i=1}||\bar{A}^{(i)}||_*=\frac{1}{n_3}||\bar{A}||_*\\
+=&\frac{1}{n_3}||(F_{n_3}\bigotimes I_{n_1})\cdot \tt{bcirc}\it(\mathcal{A}\cdot(F_{n_3}^{-1}\bigotimes I_{n_2}))||_*\\
+=&\frac{1}{n_3}||\tt{bcirc}\it(\mathcal{A})||_*.
+\end{split}
+\end{equation}
+So the tensor nuclear norm here is the nuclear norm of a new matricization of a tensor with a factor. Block circulant matricization preserves more spacial relationship.
+
+\begin{definition} (Tensor spectral norm) For a tensor $\mathcal{A}\in \mathbb{R}^{n_1\times n_2 \times n_3}$, the tensor spectral norm $||\mathcal{A}||$ is defined as $||\mathcal{A}||:=||\bar{A}||.$
+\end{definition}
+We define the tensor average rank as $rank_a(\mathcal{A})=\frac{1}{n_3}\sum_{i=1}^{n_3}rank(\bar{A}^{(i)})$,
+then the tensor nuclear norm is the convex envelop of the tensor average rank within the unit ball of the tensor spectral norm.
+
+
+\begin{definition} (Tensor incoherence conditions)For $\mathcal{L}_0\in \mathbb{R}^{n_1\times n_2 \times n_3}$ with $rank_t(\mathcal{L}_0)=r$ and skinny t-SVD $\mathcal{L}_0=\mathcal{U}*\mathcal{S}*\mathcal{V}^*$,where $\mathcal{U}\in \mathbb{R}^{n_1\times r \times n_3},\mathcal{V}\in \mathbb{R}^{n_2\times r\times n_3}$ satisfying $\mathcal{U}^* *\mathcal{U}=\mathcal{I}$, $\mathcal{V}^* *\mathcal{V}=\mathcal{I}$ and $\mathcal{S}\in \mathbb{R}^{r\times r\times n_3}$is f-diagonal. Then we say that $\mathcal{L}_0$ is said to satisfy the tensor incoherence conditions with parameter $\mu$ if
+\begin{equation}
+\max_{i=1,\cdots,n_1}||\mathcal{U}^* * \mathring{\mathfrak{e}_i}||_F\le \sqrt{\frac{\mu r}{n_1 n_3}},
+\end{equation}
+\begin{equation}
+\max_{i=1,\cdots,n_1}||\mathcal{V}^* * \mathring{\mathfrak{e}_j}||_F\le \sqrt{\frac{\mu r}{n_2 n_3}},
+\end{equation}
+\begin{equation}
+||\mathcal{U} * \mathcal{V}^*||_{\infty}\le \sqrt{\frac{\mu r}{n_1 n_2 n_3^2}}.
+\end{equation}
+\end{definition}
+
+\section{Main Result}
+The following theorem is the main result of this paper. It shows that under certain assumptions, one can exactly recover the low-rank and sparse components from incomplete measurements by solving $(\ref{TCPCP})$.
+
+To make this problem meaningful, two conditions must be satisfied: (i) $\mathcal{L}_0$ is not sparse and (ii) $\mathcal{S}_0$ is not low-rank. Here we introduce the tensor incoherence condition $\cite{LFC}$ to describe (i). For (ii), we generate a random model: each element of $\mathcal{S}_0$ is an element of its support set independently with probability $\rho$. The signs of all entries in support set are i.i.d. Bernoulli variables which take the value $\pm 1$ with probability $1/2$. We call this random distribution as an $i.i.d. Bernoulli$-$Rademacher$ model.
+
+Another condition is about the sampling ratio. Intuitively it is impossible to realize perfect recovery without enough measurements. We give a theoretical lower bound for exact recovery in the following theorem. Naturally this bound is closely related to the degrees of freedom in $(\mathcal{L}_0, \mathcal{S}_0)$. Since $\mathcal{L}_0$ is determined by $\bar{L_0}$, we only need to focus on the degrees of freedom of $\bar{L_0}$. We can fully specify $\bar{L_0}$ using $(n_1+n_2-r)rn_3$ real numbers. Roughly we can consider $||\mathcal{S}_0||_0$ to be the number of degrees of freedom in $\mathcal{S}_0$.
+\begin{theorem} \label{main}
+Let $\mathcal{L}_0,\mathcal{S}_0\in \mathbb{R}^{n_1\times n_2 \times n_3}$ with $n_1=n_2$, and suppose that $\mathcal{L}_0$ is a rank-$r$,$\mu$-incoherent tensor with
+\begin{equation}
+r\le \frac{c_r n_2 n_3}{\mu (\log(n_1 n_3)^2},
+\end{equation}
+and sign($\mathcal{S}_0$) is i.i.d. Bernoulli-Rademacher with non-zero probability $\rho<c_{s}$. Let $Q \subset \mathbb{R}^{n_1 \times n_2 \times n_3}$ be a random subspace of dimension
+\begin{equation}
+dim(Q)\ge C_{meas}\cdot (\rho n_1 n_2 n_3 + n_1 n_3 r)\cdot  \log^2 (n_1 n_3),
+\end{equation}
+distributed according to the Haar measure, probabilistically independent of sign$(\mathcal{S}_0)$. Then with probability of at least $1-C(n_1 n_3)^{-9}$ in (sign($\mathcal{S}_0$),$Q$), the solution to
+\begin{equation}\label{solutionEq}
+\min \, ||\mathcal{L}||_{*}+\lambda||\mathcal{S}||_1, \quad s.t.\mathcal{P}_Q[\mathcal{L+S}]=\mathcal{P}_Q[\mathcal{L}_0+\mathcal{S}_0],
+\end{equation}
+with $\lambda = 1/\sqrt{n_1 n_3}$ is unique and equal to $(\mathcal{L}_0,\mathcal{S}_0)$. Above, $c_r,c_s,c_{meas}$ are positive numerical constants.
+\end{theorem}
+$\cite{WGM}$ gives a tight bound for matrix case. Note that when $n_3=1$, our result reduces to $\cite{WGM}$ so the above theorem is a natural extension of theorem 2.1 in $\cite{WGM}$.
+
+\section{Proof of the Main Result}
+In this section, we prove the theorem $\ref{main}$. The main strategy is constructing a certificate whose existence leads to the conclusion that $(\mathcal{L}_0,\mathcal{S}_0)$ is the unique optimal solution to the TCPCP problem. In $\cite{LFC}$, for TPCP problem there exists a certificate $\Lambda_{PCP}$. We will use some skills to ``upgrade'' this certificate to a new certificate for TCPCP problem.
+\subsection{Certificate for TCPCP Problem}
+Here there is no harm in considering two more general problems. Consider a fully observed data tensor $\mathcal{M}$ as a sum of several components:
+\begin{equation}
+\mathcal{X}=\mathcal{X}_1+\cdots+\mathcal{X}_{\tau},
+\end{equation}
+where each $\mathcal{X}_i$ is a low-complexity component. For each type of structure, we use a certain regularizer $||\cdot||_{(i)}$ to describe its low complexity. Then we get two more general problems:
+\begin{equation} \label{GTPCP}
+\min \sum_i \lambda_i ||\mathcal{X}_i||_{(i)},
+\quad s.t. \,  \sum_i \mathcal{X}_i =\mathcal{M},
+\end{equation}
+\begin{equation} \label{GTCPCP}
+\min \sum_i \lambda_i ||\mathcal{X}_i||_{(i)},
+\quad s.t. \, \mathcal{P}_{\mathcal{Q}}[\sum_i \mathcal{X}_i] =\mathcal{P}_{\mathcal{Q}}\mathcal{M}.
+\end{equation}
+$(\ref{GTPCP})$ and $(\ref{GTCPCP})$ are general versions of TPCP and TCPCP problems respectively. Here all the  $||\cdot||_{(i)}$s are required to be $\it{decomposable}$.
+
+\begin{definition} (Decomposable norm) We say that a norm $||\cdot||$ is locally decomposable at $\mathcal{X}$ if there exists a subspace $T$ and a tensor $\mathcal{S}$ such that \[\partial ||\cdot||(\mathcal{X})=\{\Lambda \,|\, \mathcal{P}_T \Lambda =\mathcal{S}, ||\mathcal{P}_{T^{\bot}}\Lambda||^* \le 1\},\]
+where $||\cdot||^*$ denotes the dual norm, and $\mathcal{P}_{T^{\bot}}$ is non-expansive with respect to $||\cdot||^*$.
+\end{definition}
+For convenience, we introduce two more definitions about certificate:
+\begin{definition}
+$\Lambda$ is an $(\alpha,\beta)$-inexact certificate for a putative solution $(\mathcal{X}_1,\cdots,\mathcal{X}_{\tau})$ to $(\ref{GTPCP})$ with parameters $(\lambda_1,\cdots,\lambda_{\tau})$ if $||\mathcal{P}_{T_i}\Lambda-\lambda_i \mathcal{S}_i||_F\le \alpha$ and $||\mathcal{P}_{T_i^{\bot}}\Lambda||^*_{(i)}<\lambda_i \beta$ both hold for each $i$.
+\end{definition}
+\begin{definition}
+$\Lambda$ is an $(\alpha,\beta)$-inexact certificate for a putative solution $(\mathcal{X}_1,\cdots,\mathcal{X}_{\tau})$ to $(\ref{GTCPCP})$ with parameters $(\lambda_1,\cdots,\lambda_{\tau})$ if for each $i$ $||\mathcal{P}_{T_i}\Lambda-\lambda_i \mathcal{S}_i||_F\le \alpha$, $||\mathcal{P}_{T_i^{\bot}}\Lambda||^*_{(i)}<\lambda_i \beta$, and $\mathcal{P}_{Q^{\bot}}\Lambda=0$.
+\end{definition}
+The following lemma offers a sufficient optimality condition for $(\ref{GTCPCP})$:
+\begin{lemma} \label{cer}
+Consider a feasible solution $\mathcal{X}=(\mathcal{X}_1,\cdots, \mathcal{X}_{\tau})$ to problem $\ref{GTCPCP}$. Suppose that each of the norms $||\cdot||_{(i)}$ is locally decomposable at $\mathcal{X}_i$ and that each of the $a_i ||\cdot||_{(i)}$ majorizes the Frobenius norm. Then if $T_1,\cdots,T_{\tau},\mathcal{Q}^{\bot}$ are independent subspaces with
+\begin{equation}
+{||\mathcal{P}_{T_i}\mathcal{P}_{T_j}||<\frac{1}{\tau-1} \quad \forall i\not= j,}
+\end{equation}
+and there exists an $(\alpha,\beta)$-inexact certificate $\hat{\Lambda},$ with
+\begin{equation}
+\begin{split}
+\beta &+ \frac{\sqrt{\tau n_3}}{(1-||\mathcal{P}_{\mathcal{Q}^{\bot}}\mathcal{P}_{T_1+\cdots+T_{\tau}}||^2)\sqrt{1-(\tau-1)\max_{ij}||\mathcal{P}_{T_i}\mathcal{P}_{T_j}||}}\\
+&\times \frac{\alpha}{\min_l \lambda_l}<1,\\
+\end{split}
+\end{equation}
+the $\mathcal{X}$ is the unique optimal solution.
+\end{lemma}
+To prove theorem $\ref{main}$, now we only need to construct an inexact certificate with sufficiently small $(\alpha,\beta)$ as lemma $\ref{cer}$ shows. The proof of this lemma will be discussed in appendix A.
+
+\subsection{Upgrade}
+In $\cite{LFC}$, there exists an inexact certificate for TPCP problem. If $Q=\mathbb{R}^{n_1\times n_2\times n_3}$, TCPCP problem reduces to TPCP problem. Intuitively with enough amount of measurements, we may upgrade the certificate for TPCP problem to a new certificate for TCPCP problem with small loss in parameters $(\alpha,\beta)$.
+
+\begin{theorem} (Upgrade) \label{upgrade}
+Consider the general decomposition problem $(\ref{GTPCP})$,
+Suppose that each of the norms $||\cdot||_{(i)}\ge||\cdot||_F/a_i$. Let $\mathcal{X}=(\mathcal{X}_1,\cdots,\mathcal{X}_{\tau})$ be feasible for general problem and suppose there exists an $(\alpha,\beta)$-inexact certificate $\hat{\Lambda}$ for $\mathcal{X}$ for this problem with parameters $(\lambda_i)$.
+
+Then if $Q\subset \mathbb{R}^{n_1 \times n_2 \times n_3}$ is a random subspace distributed according to Haar measure, with
+\begin{equation}
+dim(Q)\ge C_{sub}\cdot dim(T_1 + \cdots + T_{\tau})\cdot \log(n_1 n_3),
+\end{equation}
+there exists an inexact certificate for $\mathcal{X}$ with
+\begin{equation}
+\begin{split}
+\alpha^{'} &\le \alpha + (n_1 n_3)^{-3} ||\hat{\Lambda}||_F, \\
+\beta^{'} & \le \beta + C_1 \max_i \frac{\nu_i+a_i \sqrt{\log(n_1 n_3)}}{\lambda_i} (\frac{||\hat{\Lambda}||^2_F\log(n_1 n_3)}{dim(Q)})^{1/2},
+\end{split}
+\end{equation}
+with probability at least $1-C_2\cdot \tau \cdot (n_1 n_3)^{-9}$ in $Q$. $C_{sub}, C_1, C_2$ are all positive numerical constants.
+\end{theorem}
+Here the degrees $(n_1 n_3)^{-3}$ and $(n_1 n_3)^{-9}$ can be set to be any larger numbers by appropriate choice of numerical constants. It will be clear in the proof. Compared with upgrade theorem in $\cite{CLM}$, we introduce factors $a_i$s since tensor nuclear norm can't majorize the Frobenius norm but with a factor. This set is important for offering a tight bound. The proof of this theorem is in appendix B.
+\subsection{Certificate for TPCP Problem}
+The proposition in this section gives an inexact certificate for TPCP problem. This result directly comes from $\cite{LFC}$ with slight modification. As will become clear in the proof, we can get a certificate for TPCP problem with smaller $(\alpha, \beta)$ from $\cite{LFC}$ by appropriate choice of some constants.
+
+\begin{proposition}  \label{prop}
+Let $\mathcal{L}_0, \mathcal{S}_0 \in \mathbb{R}^{n_1 \times n_2 \times n_3}$. Suppose that $\mathcal{L}_0$ is a rank-r tensor satisfying the tensor incoherence conditions with parameter $\mu$  where
+\begin{equation} \label{rank}
+{r \le \frac{\rho_r n_2 n_3}{\mu (\log(n_1 n_3))^2} }.
+\end{equation}
+Suppose that the support set $\Omega$ of $\mathcal{S}_0$ is uniformly distributed with probability $\rho$ where
+\begin{equation}
+{\rho \le \rho_s },
+\end{equation}
+and the signs of the non-zero entries are Rademacher random variables.
+Above, $\rho_r, \rho_s$ are positive numerical constants.
+
+ On an event of high probability, the following hold:
+\[(i) \quad || \mathcal{P}_{\Omega} \mathcal{P}_T || \le 1/2, \]
+and (ii) there exists a $ (\frac{1}{(n_1 n_3)^2}, \frac{1}{4})$-inexact TPCP certificate $\Lambda_{PCP}$ for $(\mathcal{L}_0, \mathcal{S}_0)$,
+which satisfies
+\begin{equation}
+||\Lambda_{PCP}||_F \le 4\sqrt{r} + \frac{4}{3}\lambda \sqrt{||\mathcal{S}_0||_0}.
+\end{equation}
+\end{proposition}
+The proof is delayed to appendix.
+\subsection{Proof of theorem $\ref{main}$}
+\begin{proof}
+
+We have $||\cdot||_{(1)}=||\cdot||_{*}, ||\cdot||_{(2)}=||\cdot||_1$. For TCPCP, we take $\lambda_1=1,\lambda_2=1/\sqrt{n_1 n_3}$. Let $\mathcal{L}_0 = \mathcal{U*S*V}^{*}$ denote the rank-reduced SVD of $\mathcal{L}_0$ and $T$ denote the subspace
+\begin{equation}
+T = \{\mathcal{U}*\mathcal{X}^{*} + \mathcal{Y*V^{*}} \,|\, \mathcal{X}\in\mathbb{R}^{n_1 \times r \times n_3}, \mathcal{Y}\in \mathbb{R}^{n_2  \times r \times n_3}\},
+\end{equation}
+then the subdifferential of the nuclear norm at $\mathcal{L}_0$ is
+\begin{equation}
+\partial||\cdot||_{*}(\mathcal{L}_0)= \{  \Lambda | \mathcal{P}_T \Lambda = \mathcal{U*V^{*}}, \, ||\mathcal{P}_{T^{\bot}}\Lambda ||\le 1 \}.
+\end{equation}
+Let $\Omega= supp(\mathcal{S}_0)$ denote the support of the sparse term. Let $\sum=sign(\mathcal{S}_0)$ ,then
+\begin{equation}
+\partial||\cdot||_{1}(\mathcal{S}_0)= \{  \Lambda | \mathcal{P}_{\Omega} \Lambda = \sum, \, ||\mathcal{P}_{{\Omega}^{c}}\Lambda ||_{\infty}\le 1 \}.
+\end{equation}
+It is easy to check that $||\cdot||_1, ||\cdot||_{\infty}$ are both decomposable.
+From lemma $\ref{cer}$, to show that $(\mathcal{L}_0, \mathcal{S}_0)$ is the unique optimal solution to CPCP problem, it is sufficient to show that
+\begin{equation}
+\begin{split}
+(I) & ||\mathcal{P}_T \mathcal{P}_{\Omega}|| \le \frac{1}{2} \\
+(II)& \rm{There\,\, exists\,\, an}\,\, (\alpha^{'},\frac{1}{2})-inexact \,\,CPCP \,\,cerrificate \,\, \Lambda_{CPCP}\, \\
+& \rm{with}\quad \alpha^{'}\le (1-||\mathcal{P}_{Q^{\not}}\mathcal{P}_{T+\Omega}||^2)/4\sqrt{n_1}n_3.
+\end{split}
+\end{equation}
+(i) Bounding $1-||\mathcal{P}_{Q^{\not}}\mathcal{P}_{T+\Omega}||^2$. We will apply lemma $\ref{prob1}$, which requires that
+\begin{equation}
+dim(Q)\ge C_1 \cdot dim(T+\Omega).
+\end{equation}
+The dimension of $T+\Omega$ is a random variable, which depends on the size of the support set $\Omega$. Let $\mathcal{E}_{\Omega}$ denote the event
+\begin{equation}
+\mathcal{E}_{\Omega}=\{ |\Omega| \le 2\rho n_1 n_2 n_3 + n_1 n_3 \}.
+\end{equation}
+Note that $|\Omega|$ is a sum of $n_1 n_2 n_3$ Ber($\rho$) random variables. By Bernstein's inequality,
+\begin{equation}
+\mathbb{P}[|\Omega|\ge \rho n_1 n_2 n_3+t]\le\exp(\frac{-t^2/2}{\rho n_1 n_2 n_3 +t/3}).
+\end{equation}
+Setting $t= \rho n_1 n_2 n_3 + n_1 n_3$ , we obtain that
+\begin{equation}
+\mathbb{P}[\mathcal{E}^c_{\Omega}]\le \exp(\frac{-3n_1 n_3}{10}).
+\end{equation}
+On $\mathcal{E}_{\Omega}$, we have
+\begin{equation}
+\begin{split}
+&dim(\Omega+T)\\
+<& 2\rho n_1 n_2 n_3+n_1 n_3 +2n_1 n_3 r\\
+\le & 3\cdot (\rho n_1 n_2 n_3+n_1 n_3 r).
+\end{split}
+\end{equation}
+Comparing with the condition on dim($Q$) in the theorem, we can see that on $\mathcal{E}_{\Omega}$, the condition of Lemma $\ref{prob1}$ are satisfied. Now, let $S=T+\Omega$, set $B = \{ \mathcal{X}\in S\, | \, ||\mathcal{X}||_F = 1\}$ and note that
+\begin{equation}
+\begin{split}
+&1 - ||\mathcal{P}_{Q^{\bot}}\mathcal{P}_S||^2 \\
+=& \inf_{\mathcal{X}\in B}\langle\mathcal{X},\mathcal{X}\rangle-\langle\mathcal{P}_{Q^{\bot}}\mathcal{P}_S \mathcal{X},X\rangle \\
+=& \inf_{\mathcal{X} \in B}\langle\mathcal{X},(\mathcal{P}_S-\mathcal{P}_S\mathcal{P}_{Q^{\bot}}\mathcal{P}_S)\mathcal{X}\rangle\\
+=& \inf_{\mathcal{X}\in B}\langle\mathcal{X},(\frac{dim(Q)}{n_1 n_2 n_3}\mathcal{P}_S+\mathcal{P}_S\mathcal{P}_Q\mathcal{P}_S\\
+&-\frac{dim(Q)}{n_1 n_2 n_3}\mathcal{P}_S)\mathcal{X}\rangle \\
+\ge& \frac{dim(Q)}{n_1 n_2 n_3}-\sup_{\mathcal{X}\in B}\langle\mathcal{X},(\mathcal{P}_S\mathcal{P}_Q\mathcal{P}_S\\
+&-\frac{dim(Q)}{n_1 n_2 n_3}\mathcal{P}_S)\mathcal{X}\rangle \\
+\ge& \frac{dim(Q)}{n_1 n_2 n_3}-||\mathcal{P}_S\mathcal{P}_Q\mathcal{P}_S-\frac{dim(Q)}{n_1 n_2 n_3}\mathcal{P}_S||.
+\end{split}
+\end{equation}
+Let $\mathcal{E}_Q$ be the event $\{||\mathcal{P}_S \mathcal{P}_Q \mathcal{P}_S-(dim(Q)/n_1 n_2 n_3)\mathcal{P}_S||\le \frac{1}{16}(dim(Q)/n_1 n_2 n_3)\}. $ Using lemma $\ref{prob1}$ and $dim(S)\ge n_1 n_3$, we have
+\begin{equation}
+\mathbb{P}[\mathcal{E}_Q | \mathcal{E}_{\Omega}]\ge 1- C_2 \exp(-c_1 n_1 n_3).
+\end{equation}
+On $\mathcal{E}_Q$,
+\begin{equation}
+1-||\mathcal{P}_{Q^{\bot}}\mathcal{P}_S||^2 \ge\frac{16}{15}\frac{dim(Q)}{n_1 n_2 n_3}.
+\end{equation}
+Ensuring that $C_{meas}>\frac{16}{15}$, we can further conclude that
+\begin{equation}
+1-||\mathcal{P}_{Q^{\bot}}\mathcal{P}_S||^2 \ge \frac{1}{n_1 n_3}.
+\end{equation}
+(ii) Inexact TPCP certificate. By theorem 1, on an event $\mathcal{E}_{PCP}$ of probability of at least $1-C_2 (n_1 n_3)^{-10}$, we have $||\mathcal{P}_T\mathcal{P}_{\Omega}||<\frac{1}{2}$, and there exists an $((n_1 n_3)^{-2},\frac{1}{4})$-inexact TPCP certificate $\Lambda_{PCP}$ for $(\mathcal{L}_0,\mathcal{S}_0)$, with
+\begin{equation}
+||\Lambda_{PCP}||_F \le 4\sqrt{r}+2\lambda\sqrt{|\Omega|}.
+\end{equation}
+We rewrite the bound for later use:
+\begin{equation}
+n_1 n_3||\Lambda_{PCP}||_F^2 \le n_1 n_3(32{r}+8\lambda^2|\Omega|),
+\end{equation}
+which on $\mathcal{E}_{\Omega}$ gives
+\begin{equation}
+n_1 n_3||\Lambda_{PCP}||_F^2 \le C_3(\rho n_1 n_2 n_3 + n_1 n_3 r),
+\end{equation}
+where $C_3$ is numerical.
+
+(iii) Upgrade to TCPCP certificate. Now, condition on $\mathcal{E}_{PCP}$ and $\mathcal{E}_{\Omega}$. By our assumption on $dim(Q)$ and ensuring $C_{meas}$ is sufficiently large, the conditions of theorem 4.1 are satisfied. On an event $\mathcal{E}_{upgrade}$ of conditional probability of at least $1-C_4 (n_1 n_3)^{-9}$, the certificate $\Lambda_{PCP}$ can be refined to an $(\alpha^{'},\beta^{'})$-inexact TCPCP certificate $\Lambda_{CPCP}$, with
+\begin{equation}
+\alpha^{'}\le (n_1 n_3)^{-2}+(n_1 n_3)^{-3} ||\Lambda_{PCP}||_F
+\end{equation}
+and
+\begin{equation}
+\beta^{'}\le \frac{1}{4}+C_5 (\frac{||\Lambda_{PCP}||^2_F \log^2(n_1 n_3)}{\dim(Q)})^{1/2}w ,
+\end{equation}
+where $w=\max\{ \mathbb{E}||\mathcal{G}||+\sqrt{\log(n_1 n_3)},
+\mathbb{E}||\mathcal{G}||_{\infty}\sqrt{n_1 n_3}+\sqrt{\log(n_1 n_3)}\sqrt{n_1 n_3}\}$, $\mathcal{G}$ is i.i.d. $\mathcal{N}(0,1)$. Furthermore, we have the bounds that
+\begin{equation}
+\mathbb{E}||\mathcal{G}||\le 2\sqrt{n_1 n_3} \quad and \quad
+\mathbb{E}||\mathcal{G}||_{\infty}\le 3\sqrt{2\log(n_1 n_3)}.
+\end{equation}
+For the first bound, note that $||\mathcal{G}||=\max_i ||\bar{\mathcal{G}}^{(i)}||\le 2||Re(\bar{\mathcal{G}}^{(i)})||$ where $Re(\cdot)$ denotes the real part of matrix. According to the definition of the discrete fourier transform along the 3rd dimension and $\cite{DS}$, $||Re(\bar{\mathcal{G}}^{(i)})|| \le \sqrt{\frac{n_3}{2}}\sqrt{2n_1}=\sqrt{n_1 n_3}$. Thus, we have the first bound. The second can be found on $\cite{VR2}$. So,
+\begin{equation}
+\begin{split}
+\beta^{'} &\le \frac{1}{4}+C_6 (\frac{||\Lambda_{PCP}||^2_F n_1 n_3\log^2(n_1 n_3)}{\dim(Q)})^{1/2} \\
+&\le \frac{1}{4}+ (\frac{ (\rho n_1 n_2 n_3+n_1 n_3 r) \log^2(n_1 n_3)}{\dim(Q)})^{1/2} \\
+& \le 1/2.
+\end{split}
+\end{equation}
+At last, on $\mathcal{E}_{\Omega}\cap\mathcal{E}_{Q}$,
+\begin{equation}
+(1-||\mathcal{P}_{Q^{\bot}}\mathcal{P}_S||^2)/4\sqrt{n_1}n_3\ge \frac{1}{4n_1^{3/2}n_3^2}\ge \alpha^{'},
+\end{equation}
+since we can ensure that $||\Lambda_{PCP}||_F \le \sqrt{n_1 n_3}$ with propriate selection of related constants.
+
+We have shown that on
+\begin{equation}
+\mathcal{E}_{good}=\mathcal{E}_{\Omega}\cap\mathcal{E}_{Q}\cap\mathcal{E}_{PCP}\cap\mathcal{E}_{upgrade},
+\end{equation}
+$(\mathcal{L}_0,\mathcal{S}_0)$ is the unique optimal solution to the TCPCP problem.
+
+(iv) Probability. We have
+\begin{equation}
+\begin{split}
+&\mathbb{P}[\mathcal{E}^c_{good}]\\
+\le & \mathbb{P}[(\mathcal{E}_Q\cap\mathcal{E}_{\Omega})^c]
++\mathbb{P}[(\mathcal{E}_{upgrade}\cap\mathcal{E}_{PCP}\cap\mathcal{E}_{\Omega})^c]\\
+=& 1-\mathbb{P}[\mathcal{E}_Q|\mathcal{E}_{\Omega}]\mathbb{P}[\mathcal{E}_{\Omega}]+
+1\\
+&-\mathbb{P}[\mathcal{E}_{upgrade}|\mathcal{E}_{PCP}\cap\mathcal{E}_{\Omega}]\mathbb{P}[\mathcal{E}_{PCP}\cap\mathcal{E}_{\Omega}]\\
+\le  & 1-\mathbb{P}[\mathcal{E}_Q|\mathcal{E}_{\Omega}]+\mathbb{P}[\mathcal{E}_{\Omega}^c]+
+1\\
+&-\mathbb{P}[\mathcal{E}_{upgrade}|\mathcal{E}_{PCP}\cap\mathcal{E}_{\Omega}]+\mathbb{P}[\mathcal{E}_{PCP}^c]+\mathbb{P}[\mathcal{E}_{\Omega}^c]\\ \le & C_2 \exp(-c_1 n_1 n_3)+ 2\exp(\frac{-3n_1 n_3}{10})+C_4 (n_1 n_3)^{-9}\\
+&+C_2 (n_1 n_3)^{-10}\\
+\le &C(n_1 n_3)^{-9}. \\
+\end{split}
+\end{equation}
+\end{proof}
+\section{Numerical Experiments}
+In this section, we design proper algorithm to solve the solution of TCPCP given in theorem $\ref{main}$. Then conduct numerical experiments to corroborate our main results, applying TCPCP to image observed by Guassian sampling. Specifically, we solve (\ref{solutionEq}) by Alternating Direction Method of Multipliers (ADMM).
+\subsection{Optimization by ADMM}
+
+\begin{equation}
+\min_{\mathcal{L},\mathcal{S}}\|\mathcal{L}\|_*+\lambda \|\mathcal{S}\|_1, s.t. P_{\Omega}(\mathcal{S+L})=P_{\Omega}\mathcal{X}_0.
+\end{equation}
+
+Rewrite the constraint of \ref{solutionEq} into $G\mathcal{(S(:)+L(:))}=G\mathcal{X}_0(:)=g$, where "(:)" denote the MatLab notation. In order to solve this problem by ADMM, we introduce $\mathcal{P}, \mathcal{Q}$ and then obtain the following optimization problem,
+\begin{align*}
+ \min_{\mathcal{S},\mathcal{L},\mathcal{P},\mathcal{Q}}\|\mathcal{P}
+\|_*+\lambda \|\mathcal{Q}\|_1+\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2,\\
+%\quad
+ s.t.\, \mathcal{P=L,~Q=S}.
+\end{align*}
+The Lagrangian is augmented as
+\begin{align*}
+\mathcal{L}_{\rho_1,\rho_2}(\mathcal{S},\mathcal{L},\mathcal{P},\mathcal{Q})
+=&\|P\|_*+\lambda \|\mathcal{Q}\|_1\\
++&\frac{\rho_1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_{F}^2\\
++&\frac{\rho_2}{2}\|\mathcal{S-Q}+\rho_2^{-2}\mathcal{Z}_2\|_{F}^2\\
++&\frac{\rho_3}{2}\|G\mathcal{(S(:)+L(:))}-g+\rho_3^{-2}\mathcal{Z}_3\|_{F}^2
+\end{align*}
+Each of the above sub-problems can be solved as follows,
+\begin{align*}
+\mathcal{P}
+&=arg\min_{\mathcal{P}}\frac{1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_F^2
+ +\frac{1}{\rho_1}\|P\|_*\notag\\
+&=D_{1/\rho_1}(\mathcal{L}+\rho_1^{-1}\mathcal{Z}_1)\\
+\mathcal{Q}
+&=arg\min_{\mathcal{Q}}\frac{1}{2}\|\mathcal{S-Q}+\rho_2^{-1}\mathcal{Z}_1\|_F^2
+ +\frac{\lambda}{\rho_2}\|P\|_*\notag\\
+&=S_{\lambda/\rho_2}(\mathcal{S}+\rho_2^{-1}\mathcal{Z}_2)\\
+\mathcal{L}
+&=arg\min_{\mathcal{L}}\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2
+ +\frac{\rho_1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_{F}^2\notag\\
+&=(\mu G^TG+\rho_1I)^{-1}(\mu G^T g+\rho_1\mathcal{P}(:)-\mathcal{Z}_1
+ -\mu G^TG\mathcal{S}(:))\\
+\mathcal{S}
+&=arg\min_{\mathcal{S}}\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2
+ +\frac{\rho_2}{2}\|\mathcal{S-Q}+\rho_2^{-1}\mathcal{Z}_2\|_{F}^2\notag\\
+&=(\mu G^TG+\rho_2I)^{-1}(\mu G^T g+\rho_2\mathcal{Q}(:)-\mathcal{Z}_2
+ -\mu G^TG\mathcal{L}(:))
+\end{align*}
+Therefore, we can solve the optimization problem (\ref{solutionEq}) by ADMM, shown in Algorithm 1.
+\begin{algorithm}[!htbp]
+  \caption*{\textbf{Algorithm 1: Solve TCPCP by ADMM}}
+  \begin{algorithmic}[1]
+    \State Initialization $\mathcal{S}=\mathcal{L}=\mathcal{P}=\mathcal{Q}=\mathcal{Z}_1=\mathcal{Z}_2=zeros(dim(X_0))$
+    \For{$k=1,2,\cdots$}
+        \State update $\mathcal{P}$: $\mathcal{P}=D_{\frac{1}{\rho_1}}(\mathcal{L}+\rho_1^{-1}\mathcal{Z}_1)$
+        \State update $\mathcal{Q}$: $\mathcal{P}=S_{\frac{\lambda}{\rho_2}}(\mathcal{S}+\rho_2^{-1}\mathcal{Z}_2)$
+        \State update $\mathcal{L}$: $\mathcal{L}(:)$ = $(\mu G^TG+\rho_1I)^{-1}
+                                                (\rho_3 G^T g+\rho_1\mathcal{P}(:)-\mathcal{Z}_1-\mu G^TG\mathcal{S}(:)-G^TZ_3)$
+        \State update $\mathcal{S}$: $\mathcal{S}(:)$ = $(\mu G^TG+\rho_1I)^{-1}
+                                                (\rho_3 G^T g+\rho_2\mathcal{Q}(:)-\mathcal{Z}_2-\mu G^TG\mathcal{L}(:)-G^TZ_3)$
+        \State dual update $\mathcal{Z}_1$: $\mathcal{Z}_1=\mathcal{Z}_1+\rho_1*(\mathcal{L-P})$
+        \State dual update $\mathcal{Z}_2$: $\mathcal{Z}_2=\mathcal{Z}_2+\rho_2*(\mathcal{S-Q})$
+        \State dual update $\mathcal{Z}_3$: $\mathcal{Z}_3=\mathcal{Z}_3+\rho_3*(G\mathcal{(S(:)+L(:))}-g)$
+    \EndFor
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{Exact Recovery from Varying Fractions of Errors and Observations}
+\section{Conclusion}
+In this paper, we have proved that under certain conditions, one can exactly recover both low-rank and sparse components from a small set of measurements. Meanwhile we established a theoretical bound about the number of measurements required for perfect recovery. In experiment,......
+\appendices
+
+\section{Proof of Lemma $\ref{cer}$}
+We need two extra lemmas to prove lemma $\ref{cer}$.
+
+\begin{lemma} \label{exact}
+ Consider a feasible solution $\mathcal{X}=(\mathcal{X}_1,\cdots, \mathcal{X}_{\tau})$ to the $(\ref{GTCPCP})$:
+Suppose that each of the norms $||\cdot||_{(i)}$ is locally decomposable at $\mathcal{X}_i.$ If $T_1,\cdots,T_{\tau},\mathcal{Q}^{\bot}$ are independent subspaces and there exists $\Lambda$ satisfying $\mathcal{P}_{T_i}\Lambda=\lambda_i \mathcal{S}_i$ and $||\mathcal{P}_{T_i^{\bot}}\Lambda||_{(i)}^* < \lambda_i$ for each $i$, and $\mathcal{P}_{\mathcal{Q}^{\bot}} \Lambda=0$, then $\mathcal{X}$ is the unique optimal solution to $(\ref{GTCPCP})$.
+\end{lemma}
+
+\begin{proof}
+Let $f$ denote the objective function. Consider a feasible perturbation $\delta = (\Delta_1,\cdots,\Delta_{\tau}),$ so $\mathcal{P}_{\mathcal{Q}}\sum_i \Delta_i=0.$ Then for any $\mathcal{W}_1,\cdots,\mathcal{W}_{\tau}$ such that $\forall i, \mathcal{W}_i \in \partial||\cdot||_{(i)}(\mathcal{X}_i)$, according to the definition of subgradient we have
+\begin{equation}
+{f(\mathcal{X}+\delta)\ge f(\mathcal{X})+\sum_i \lambda_i\langle\mathcal{W}_i,\Delta_i\rangle.}
+\end{equation}
+By duality of norms, for each i there exists $\mathcal{H}_i \in \mathbb{R}^{n_1\times n_2 \times n_3}$ with $||\mathcal{H}_i||_{(i)}^*\le 1$ and \[\langle\mathcal{H}_i, \mathcal{P}_{T_i^{\bot}}\Delta_i\rangle=||\mathcal{P}_{T_i^{\bot}}\Delta_i||_{(i)}.\]
+Set $\mathcal{W}_i = \mathcal{S}_i+\mathcal{P}_{T_i^{\bot}}\mathcal{H}_i.$ Since $\mathcal{P}_{T_i}\mathcal{W}_i=\mathcal{S}_i$ and $||\mathcal{P}_{T_i^{\bot}}\mathcal{W}_i||^*_{(i)}\le 1$, \[\mathcal{W}_i\in \partial||\cdot||_{(i)} (\mathcal{X}_i).\]
+\begin{equation}
+\begin{split}
+\langle\mathcal{W}_i,\Delta_i\rangle &= \langle\mathcal{P}_{T_i}\mathcal{W}_i, \Delta_i\rangle + \langle\mathcal{P}_{T_i^{\bot}}\mathcal{W}_i, \Delta_i\rangle \\
+& = \langle\mathcal{P}_{T_i}\mathcal{W}_i, \mathcal{P}_{T_i}\Delta_i\rangle + \langle\mathcal{P}_{T_i^{\bot}}\mathcal{W}_i, \mathcal{P}_{T_i^{\bot}}\Delta_i\rangle \\
+& = \langle\mathcal{S}_i, \mathcal{P}_{T_i}\Delta_i\rangle + \langle\mathcal{P}_{T_i^{\bot}}\mathcal{H}_i, \mathcal{P}_{T_i^{\bot}}\Delta_i\rangle \\
+& = \langle\mathcal{S}_i, \mathcal{P}_{T_i}\Delta_i\rangle + \langle\mathcal{H}_i, \mathcal{P}_{T_i^{\bot}}\Delta_i\rangle \\
+& = \langle\mathcal{S}_i, \mathcal{P}_{T_i}\Delta_i\rangle + ||\mathcal{P}_{T_i^{\bot}} \Delta_i||_{(i)}.\\
+\end{split}
+\end{equation}
+\begin{equation}
+\begin{split}
+f(\mathcal{X}+\delta)&\ge f(\mathcal{X}) + \sum_i \langle\lambda_i \mathcal{S}_i, \mathcal{P}_{T_i}\Delta_i\rangle + \lambda_i ||\mathcal{P}_{T_i^{\bot}}\Delta_i||_{i} \\
+ = &f(\mathcal{X}) + \sum_i \langle\mathcal{P}_{T_i}\Lambda, \mathcal{P}_{T_i}\Delta_i\rangle + \lambda_i ||\mathcal{P}_{T_i^{\bot}}\Delta_i||_{i} \\
+ = &f(\mathcal{X}) + \sum_i \langle\Lambda, \mathcal{P}_{T_i}\Delta_i\rangle + \lambda_i ||\mathcal{P}_{T_i^{\bot}}\Delta_i||_{i} \\
+ = &f(\mathcal{X}) + \sum_i \langle\Lambda, \Delta_i\rangle - \langle\mathcal{P}_{T_i^{\bot}}\Lambda, \mathcal{P}_{T_i^{\bot}}\Delta_i\rangle \\
+& + \lambda_i ||\mathcal{P}_{T_i^{\bot}}\Delta_i||_{i} \\
+\ge & f(\mathcal{X}) + \sum_i \langle\Lambda, \Delta_i\rangle - ||\mathcal{P}_{T_i^{\bot}}\Lambda||^*_{i} ||\mathcal{P}_{T_i^{\bot}}\Delta_i||_{i} \\
+& + \lambda_i ||\mathcal{P}_{T_i^{\bot}}\Delta_i||_{i} \\
+\ge &f(\mathcal{X}) + \sum_i (\lambda_i - ||\mathcal{P}_{T_i^{\bot}}\Lambda||^*_{i}) ||\mathcal{P}_{T_i^{\bot}}\Delta_i||_{i}, \\
+\end{split}
+\end{equation}
+where we have used that $\Lambda \in \mathcal{Q}, \Delta_j \in \mathcal{Q}^{\bot}$. Since $||\mathcal{P}_{T_i^{\bot}}\Lambda||_{(i)}^* < \lambda_i$ for each $i$, if any of the $||\mathcal{P}_{T_i^{\bot}}\Delta_i||_{i}$ is non-zero, then $f(\mathcal{X}+\delta)\ge f(\mathcal{X}).$ If $\mathcal{P}_{T_i^{\bot}}\Delta_i = 0$ for each i, $\Delta_i \in T_i$ which implies that $\sum_i \Delta_i \in (T_1 + \cdots + T_{\tau})\cap Q^{\bot}$. If $\sum_i \Delta_i \neq 0$, this contradicts independence of $(T_1,\cdots,T_{\tau},\mathcal{Q}^{\bot}).$ If $\sum_i \Delta_i = 0$, this contradicts independence of $(T_1,\cdots,T_{\tau}).$
+\end{proof}
+
+\begin{lemma}  \label{system}
+Let $T_1,\cdots,T_k$ be independent subspaces of $\mathbb{R}^{n_1\times n_2\times n_3}$ and $\mathcal{S}_1 \in T_1,\cdots,\mathcal{S}_k \in T_k.$ Then the system of equations
+\begin{equation}
+{\mathcal{P}_{T_i}\mathcal{X}=\mathcal{S}_i,\quad i=1,\cdots,k}
+\end{equation}
+has a solution $\mathcal{X}\in T_1 +\cdots+T_k $ satisfying
+\begin{equation}\label{sys}
+{ ||\mathcal{X}||_F \le \sqrt{\frac{\sum_i ||\mathcal{S}_i||^2_F}{1-(k-1)\max_{i\not=j}||\mathcal{P}_{T_i}\mathcal{P}_{T_j}||}} }
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let vec:$\mathbb{R}^{n_1\times n_2\times n_3}\rightarrow \mathbb{R}^{n_1 n_2 n_3}$ denote the operator that vectorizes a tensor by stacking its fibers. For each i, let $U_i \in \mathbb{R}^{n_1 n_2 n_3 \times \dim(T_i)}$ denote a matrix whose columns form an orthonormal basis for vec$[T_i]$. The system of equations is equivalent to
+\[ \left[
+\begin{matrix}
+U_1^* \\
+\vdots \\
+U_k^* \\
+\end{matrix}
+\right] x =
+\left[
+\begin{matrix}
+U_1^*\cdot vec[S_1] \\
+\vdots \\
+U_k^*\cdot vec[S_k] \\
+\end{matrix}
+\right],
+ \]
+where $x = vec[\mathcal{X}].$ Let $U^*$ denote the matrix on the left side and s denote the vector on the right side. The system of equations has a solution $x \in range(U) = vec[T_1+\cdots+T_k]$ with the $l^2$ norm at most $||s||_2/\sigma_{\min}(U).$
+Write
+\[ \left(
+ \begin{matrix}
+   I & U_1^*U_2 & \cdots & U_1^*U_k \\
+   U_2^*U_1 & I & \cdots & U_2^*U_k \\
+   \vdots & \vdots &\ddots & \vdots \\
+  U_k^*U_1 & U_k^*U_2 & \cdots & I \\
+  \end{matrix}
+ \right). \]
+ Let $\lambda$ be any eigenvalue of $U^* U,$ with corresponding eigenvector $x = (x_1^*, x_2^*,\cdots,x_k^*)^*.$ Let $p = \arg\max_j ||x_j||_2.$ Then, looking at the p-th block of the equation $\lambda x =U U^* x,$ we have
+ \begin{equation}
+ \begin{split}
+ |\lambda-1| \, ||x_p||_2 &=  ||\sum_{j\not=p}U_p^* U_j x_j||_2 \\
+ & \le \sum_{j\not= p}||U_p^* U_j||\, ||x_j||_2 \\
+ & \le ||x_p||_2 \times (k-1) \max_{i\not=j}||U_i^*U_j||. \\
+ \end{split}
+ \end{equation}
+ Since $||U_i^* U_j|| = ||\mathcal{P}_{T_i}\mathcal{P}_{T_j}||,$ we conclude that
+\begin{equation}
+{\sigma_{\min}(U)
+=\sqrt{\lambda_{\min}(U_*U)}
+\ge \sqrt{1-(k-1)\max_{i\not=j}||\mathcal{P}_{T_i}\mathcal{P}_{T_j}}||. }
+\end{equation}
+Combined with $||x||_2 \le ||s||_2 /\sigma_{\min}(U)$, $(\ref{sys})$ is proved.
+\end{proof}
+
+\begin{proof}
+According to lemma $\ref{system}$, the system of equations
+\begin{equation}
+{\mathcal{P}_{T_i}\Delta = \lambda_i \mathcal{S}_i - \mathcal{P}_{T_i}\hat{\Lambda}, \quad i=1,\cdots,\tau }
+\end{equation}
+has a solution $\Delta_0 \in T_1 + \cdots + T_{\tau}$ with
+\begin{equation}
+{||\Delta_0||_F \le \sqrt{\frac{\sum_i ||\lambda_i \mathcal{S}_i - \mathcal{P}_{T_i}\hat{\Lambda}||^2_F}{1-(\tau-1)\max_{i\not=j}||\mathcal{P}_{T_i}\mathcal{P}_{T_j}||}}.}
+\end{equation}
+Since $T_1 + \cdots +T_{\tau}$ and $\mathcal{Q}^{\bot}$ are independent, the system of equations
+\begin{equation}
+{\mathcal{P}_{T_1 + \cdots + T_{\tau}}\Delta = \Delta_0, \quad \mathcal{P}_{\mathcal{Q}^{\bot}}\Delta=0 }
+\end{equation}
+is feasible. We consider a solution $\Delta_{*}$ of minimum Frobenius norm:
+\begin{equation}
+{\Delta_* = \mathcal{P}_{\mathcal{Q}}\sum_{i=1}^{\infty}(\mathcal{P}_{T_1+\cdots+T_{\tau}}\mathcal{P}_{\mathcal{Q}^{\bot}}\mathcal{P}_{T_1+\cdots+T_{\tau}})^i \Delta_0,}
+\end{equation}
+whose norm is bounded as
+\begin{equation}
+{||\Delta_*||_F\le \frac{||\Delta_0||_F}{1-||\mathcal{P}_{T_1+\cdots+T_{\tau}}\mathcal{P}_{\mathcal{Q}^{\bot}}||^2}.}
+\end{equation}
+Set $\Lambda = \hat{\Lambda}+\Delta_*$. Note that $\mathcal{P}_{T_i}\Lambda = \lambda_i \mathcal{S}_i.$ For each i, we have
+\begin{equation}
+\begin{split}
+\lambda_i^{-1}||\mathcal{P}_{T_i^{\bot}}\Lambda||_{(i)}^* \le & \lambda_i^{-1}||\mathcal{P}_{T_i^{\bot}}\hat{\Lambda}||_{(i)}^*
++\lambda_i^{-1}||\mathcal{P}_{T_i^{\bot}}\Delta_*||_{(i)}^* \\
+\le & \lambda_i^{-1}||\mathcal{P}_{T_i^{\bot}}\hat{\Lambda}||_{(i)}^*
++\lambda_i^{-1}\sqrt{n_3}||\mathcal{P}_{T_i^{\bot}}\Delta_*||_F \\
+< & \beta + \frac{\sqrt{\tau n_3}}{(1-||\mathcal{P}_{\mathcal{Q}^{\bot}}\mathcal{P}_{T_1+\cdots+T_{\tau}}||^2)}\\
+& \cdot \frac{\alpha}{\sqrt{1-(\tau-1)\max_{ij}||\mathcal{P}_{T_i}\mathcal{P}_{T_j}||}\min_l \lambda_l} \\
+& <1 .
+\end{split}
+\end{equation}
+We also note that $\mathcal{P}_{\mathcal{Q}^{\bot}}\Lambda =0.$ According to lemma $\ref{exact}$, $\mathcal{X}$ is the unique optimal solution.
+\end{proof}
+
+\section{Proof of Theorem $\ref{upgrade}$}
+Before introducing the proof of upgrade theorem, we prove two important probabilistic lemmas which will be used in later proof.
+\begin{lemma} \label{prob1}
+Let $S \subseteq \mathbb{R}^{n_1\times n_2\times n_3}$be a fixed linear subspace and let $\mathcal{A}=\sum_{j=1}^{\gamma}\mathcal{H}_j\langle\mathcal{H}_j,\cdot\rangle$, where $(\mathcal{H}_j)$ is a sequence of independent i.i.d $\mathcal{N}(0,1/n_1n_2n_3)$ random tensors, and let $\mathcal{R}=range(\mathcal{A})\subseteq \mathbb{R}^{n_1\times n_2\times n_3}$. Then if
+\begin{equation}
+\gamma \ge C_1\cdot \dim(S),
+\end{equation}
+with probability of at least $1-C_2 \exp(-c\gamma)$, for some numerical constants $C_1,C_2,c$,
+\begin{equation}
+\begin{split}
+&||\mathcal{P}_S \frac{n_1 n_2 n_3}{\gamma}\mathcal{A} \mathcal{P}_S-\mathcal{P}_S||\le \frac{1}{2}, \\
+&||\mathcal{P}_S \mathcal{P}_R \mathcal{P}_S-\frac{\gamma}{n_1 n_2 n_3}\mathcal{P}_S||\le \frac{1}{16} \frac{\gamma}{n_1 n_2 n_3}.
+\end{split}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Fix an $\frac{1}{4}$-net for the unit ball of $||\cdot||_F,$ restricted to $S$. By lemma 5.2 in $\cite{VR}$, there exists such a net of size at most $\exp(\dim(S)\log9)$.
+
+\noindent Let $\mathcal{H}:\mathbb{R}^{\gamma}\rightarrow \mathbb{R}^{n_1 \times n_2 \times n_3}$ via $\mathcal{H}\bf{x}=\sum^{\gamma}_{i=1}\mathcal{H}_i x_i,$ and let $\psi:\mathbb{R}^{\gamma}\rightarrow \mathbb{R}^{n_1\times n_2 \times n_3}$ via $\psi \bf{x}= \sum^{\gamma}_{i=1}\bar{\mathcal{H}_i} x_i,$ where $(\bar{\mathcal{H}_i})$ is an orthonormal sequence of tensors that span R. We have $\mathcal{A}=\mathcal{H}\mathcal{H}^*$ and $\mathcal{P}_R=\psi\psi^*.$ According to lemma 5.4 in $\cite{VR}$,
+\begin{equation}
+\begin{split}
+&||\mathcal{P}_S \frac{n_1 n_2 n_3}{\gamma}\mathcal{A}\mathcal{P}_S-\mathcal{P}_S|| \\
+=& \sup_{\mathcal{X}\in S,||\mathcal{X}||_F=1} |\langle(\frac{n_1 n_2 n_3}{\gamma}\mathcal{A}-\mathcal{I})\mathcal{X},\mathcal{X}\rangle| \\
+=& \sup_{\mathcal{X}\in S,||\mathcal{X}||_F=1} |\,\frac{n_1 n_2 n_3}{\gamma}||\mathcal{H}^*\mathcal{X}||^2_2-1 \,| \\
+\le &2\sup_{\mathcal{X}\in \Gamma} |\,\frac{n_1 n_2 n_3}{\gamma}||\mathcal{H}^*\mathcal{X}||^2_2-1 \,|
+\end{split}
+\end{equation}
+After short calculation, we note that $\sqrt{(n_1 n_2 n_3/\gamma)}\mathcal{H}^*\mathcal{X}$ is distributed as an i.i.d $\mathcal{N}(0,1/\gamma)$ random vector. According to lemma 1 in $\cite{LM}$,
+\begin{equation}
+\mathbb{P}[\,|\frac{n_1 n_2 n_3}{\gamma}||\mathcal{H}^*\mathcal{X}||^2_2-1|\ge 2\sqrt{\frac{t}{\gamma}}+2\frac{t}{\gamma}]\le 2e^{-t}.
+\end{equation}
+choose $t=c_1 \gamma,$ with $c_1$ small enough that $2\sqrt{c_1}+c_1\le \frac{1}{4}.$ Take a union bound to get
+\begin{equation}
+\begin{split}
+&\mathbb{P}[\,||\mathcal{P}_S \frac{n_1 n_2 n_3}{\gamma}\mathcal{A}\mathcal{P}_S||\ge\frac{1}{2}] \\
+\le& \mathbb{P}[\, \sup_{\mathcal{X}\in\Gamma}|\frac{n_1 n_2 n_3}{\gamma}||\mathcal{H}^*\mathcal{X}||^2_2-1|\ge \frac{1}{4}] \\
+\le& 2\exp(-c_1 \gamma +\dim(S)\log9).
+\end{split}
+\end{equation}
+Using the assumption $\gamma>C_1 \dim(S)$ and ensuring $C_1 >\log 9/c_1$.
+
+For the second term, we use similar strategies to get that
+\begin{equation}
+||\frac{n_1 n_2 n_3}{\gamma} \mathcal{P}_S \mathcal{P}_R \mathcal{P}_{S} -\mathcal{P}_S|| \le 2 \sup_{\mathcal{X}\in \Gamma}|\frac{n_1 n_2 n_3}{\gamma}||\psi^*\mathcal{X}||^2_2-1|.
+\end{equation}
+Note that $\psi^*\mathcal{X}$ is equal in distribution to the restriction of a uniformly distributed random unit vector $r \in \mathbb{S}^{n_1 n_2 n_3-1}$ to its first $\gamma$ coordinates. According to lemma 2.2 of [4], we have that for every $t>0,$ there exits $c_t>0$ such that
+\begin{equation}
+\mathbb{P}[|\frac{n_1 n_2 n_3}{\gamma}||\psi^*\mathcal{X}||^2_2-1|>t]\le \exp(-c_t\gamma).
+\end{equation}
+Set $t=\frac{1}{32}.$ Ensuring $C_1$ is larger that $\log9/c_t$ and taking a union bound to get
+\begin{equation}
+\begin{split}
+&\mathbb{P}[\mathcal{P}_S\mathcal{P}_R\mathcal{P}_S-\frac{\gamma}{n_1 n_2 n_3}\mathcal{P}_S||>\frac{1}{16}\frac{\gamma}{n_1 n_2 n_3}] \\
+\le& \exp(-c_t \gamma+\dim(S)\log 9). \\
+\end{split}
+\end{equation}
+\end{proof}
+
+\begin{lemma} \label{prob2}
+Let $S$ be any fixed subspace of $\mathbb{R}^{n_1 \times n_2 \times n_3}$, $\mathcal{M}$ be any fixed tensor. Let $\mathcal{A}=\sum^{\gamma}_{l=1}\mathcal{H}_l\langle\mathcal{H}_l,\cdot\rangle $be a random semidefinite operator constructed from a sequence of independent i.i.d. $\mathcal{N}(0,1/n_1 n_2 n_3)$ tensors $\mathcal{H}_1,\cdots,\mathcal{H}_{\gamma}$. Let $||\cdot||$ be any norm that majorizes the $||\cdot||_F/a$ and let $||\cdot||^*$ be its dual norm, where $a$ is a positive numerical constant. Set $\nu=\mathbb{E}[||\mathcal{G}||^*]$, with $\mathcal{G}$ i.i.d. $\mathcal{N}(0,1).$ Then we have
+\begin{equation}
+||\mathcal{P}_{S^{\bot}}\frac{n_1 n_2 n_3}{\gamma}\mathcal{A}\mathcal{P}_S \mathcal{M}||^*\le 10 ||\mathcal{P}_S \mathcal{M}||_F \frac{\nu+a \sqrt{\log(n_1 n_3)}}{\sqrt{\gamma}},
+\end{equation}
+with probability of at least $1-(n_1 n_3)^{-10}-\exp(-\gamma/2)$.
+\end{lemma}
+
+\begin{proof}
+Let $\Gamma=\{\mathcal{N}\,|\, ||\mathcal{N}||\le1\} \subset\{\mathcal{N}\,|\,||\mathcal{N}||_F\le a\}$ denote the unit ball for $||\cdot||$. Then
+\begin{equation}
+||\mathcal{P}_{S^{\bot}}\mathcal{A}\mathcal{P}_S\mathcal{M}||^*=\sup_{\mathcal{N}\in\Gamma}\langle\mathcal{N},\mathcal{P}_{S^{\bot}}\mathcal{A}\mathcal{P}_S\mathcal{M}\rangle.
+\end{equation}
+Since $S$ and $S^{\bot}$ are orthogonal and $\mathcal{H}_l$ is i.i.d. Gaussian, $\mathcal{P}_S\mathcal{H}_l$ and $\mathcal{P}_{S^{\bot}}\mathcal{H}_l$ are probabilistically independent. So, letting $\mathcal{H}_1^{'},\cdots,\mathcal{H}_{\gamma}^{'}$ denote an independent copy of $\mathcal{H}_1,\cdots,\mathcal{H}_{\gamma},$ we have
+\begin{equation}
+\begin{split}
+\mathcal{P}_{S^{\bot}}\mathcal{A}\mathcal{P}_S[\cdot] &= \mathcal{P}_{S^{\bot}}\sum_l \mathcal{H}_l \langle\mathcal{H}_l,\mathcal{P}_S[\cdot]\rangle \\
+&=\sum_l \mathcal{P}_{S^{\bot}}\mathcal{H}_l \langle\mathcal{P}_S\mathcal{H}_l,\cdot\rangle \\
+&=\sum_l \mathcal{P}_{S^{\bot}}\mathcal{H}_l \langle\mathcal{P}_S\mathcal{H}_l^{'},\cdot\rangle \\
+&\triangleq \mathcal{D},
+\end{split}
+\end{equation}
+Hence, we have
+\begin{equation}
+||\mathcal{P}_{S^{\bot}}\mathcal{A}\mathcal{P}_S \mathcal{M}||^*=||\mathcal{D}\mathcal{M}||^*.
+\end{equation}
+Conditioned on $\mathcal{H}_1^{'},\cdots,\mathcal{H}_{\gamma}^{'}$,
+\begin{equation}
+\xi_{\mathcal{N}}\triangleq\langle\mathcal{N},\mathcal{D}\mathcal{M}\rangle
+=\sum_l\langle\mathcal{P}_S \mathcal{H}_l^{'},\mathcal{M}\rangle \langle\mathcal{P}_{S^{\bot}} \mathcal{N}, \mathcal{H}_l\rangle
+\end{equation}
+is zero-mean Gaussian. $||\mathcal{D}\mathcal{M}||^*=\sup_{\mathcal{N}\in \Gamma}\xi_{\mathcal{N}}$.
+\begin{equation}
+\begin{split}
+&\mathbb{E}[(\xi_{\mathcal{N}}-\xi_{\mathcal{N}^{'}})^2|\mathcal{H}_1^{'},\cdots,\mathcal{H}_{\gamma}^{'}]\\
+=&\frac{\mathcal{P}_{S^{\bot}}(\mathcal{N}-\mathcal{N}^{'})^2_F}{n_1 n_2 n_3} \sum^{\gamma}_{l=1}\langle\mathcal{P}_{S}\mathcal{H}_l^{'},\mathcal{M}\rangle^2 \\
+\le& \frac{||\mathcal{N}-\mathcal{N}^{'}||^2_F}{n_1 n_2 n_3}\sum^{\gamma}_{l=1}\langle\mathcal{P}_{S}\mathcal{H}_l^{'},\mathcal{M}\rangle^2 \\
+=& \frac{\Xi^2 ||\mathcal{N}-\mathcal{N}^{'}||^2_F}{n_1 n_2 n_3},\\
+\end{split}
+\end{equation}
+where we define that
+\begin{equation}
+\Xi=(\sum^{\gamma}_{l=1}\langle\mathcal{H}_l^{'},\mathcal{P}_S\mathcal{M}\rangle^2)^{\frac{1}{2}}.
+\end{equation}
+Consider $\zeta_{\mathcal{N}}=\langle\mathcal{N},\mathcal{G}\rangle$ where $\mathcal{G}$ is an i.i.d $\mathcal{N}(0,1/n_1 n_2 n_3)$ tensor. From the definition of $\nu$,
+\begin{equation}
+\mathbb{E}[\,\sup_{\mathcal{N}\in\Gamma}\xi_{\mathcal{N}}\, ] =\frac{\nu}{\sqrt{n_1 n_2 n_3}}.
+\end{equation}
+Another calculation shows that
+\begin{equation}
+\mathbb{E}[(\zeta_{\mathcal{N}}-\zeta_{\mathcal{N}^{'}})^2]=\frac{||\mathcal{N}-\mathcal{N}^{'}||^2_F}{n_1 n_2 n_3}.
+\end{equation}
+By Slepian's inequality, we have
+\begin{equation}
+\mathbb{E}[\sup_{\mathcal{N}}\xi_{\mathcal{N}} \, | \mathcal{H}_1^{'},\cdots,\mathcal{H}_{\gamma}^{'}]\le \Xi \cdot \mathbb{E}[\sup_{\mathcal{N}}\zeta_{\mathcal{N}}] = \frac{\nu \Xi}{\sqrt{n_1 n_2 n_3}}.
+\end{equation}
+For fixed $\mathcal{H}_1^{'},\cdots,\mathcal{H}_{\gamma}^{'}$ and $\mathcal{N}\in \Gamma$,
+\begin{equation}
+\begin{split}
+&|\xi_{\mathcal{N}}(\mathcal{H}_1^{'},\cdots,\mathcal{H}_{\gamma}^{'})
+-\xi_{\mathcal{N}}(\tilde{\mathcal{H}_1^{'}},\cdots,\tilde{\mathcal{H}_{\gamma}^{'})}|\\
+ =&| \sum^{\gamma}_{l=1}\langle\mathcal{P}_S \mathcal{H}_l^{'},\mathcal{M}\rangle\langle\mathcal{P}_{S^{\bot}}\mathcal{N},\mathcal{H}_l-\tilde{\mathcal{H}_l}\rangle |\\
+ \le & (\sum_l \langle\mathcal{P}_S \mathcal{H}_l^{'},\mathcal{M}\rangle^2)^{\frac{1}{2}}
+(\sum_l \langle\mathcal{P}_{S^{\bot}}\mathcal{N},\mathcal{H}_l-\tilde{\mathcal{H}_l}\rangle^2)^{\frac{1}{2}}\\
+\le & a\Xi (\sum_l||\mathcal{H}_l-\tilde{\mathcal{H}_l^{'}}||_F^2)^{\frac{1}{2}}.
+\end{split}
+\end{equation}
+$\xi_{\mathcal{N}}$ is a $a \Xi -$ Lipschitz function of the i.i.d. Gaussian sequence $(\mathcal{H}_1,\cdots,\mathcal{H}_{\gamma}).$ Hence, the supremum $||\mathcal{D} \mathcal{M}^{*}||$ is also $a \Xi- $ Lipschitz. By proposition 2.18 in $\cite{LM2}$,
+\begin{equation}
+\mathbb{P}[\mathcal{||DM||^*}>\mathbb{E}[||\mathcal{DM}||^*\, | \,(\mathcal{H}_l^{'})] + \frac{t a\Xi}{\sqrt{n_1 n_2 n_3}}]\le \exp(-\frac{t^2}{2}).
+\end{equation}
+Combining with previous estimates, we have
+\begin{equation}
+\mathbb{P}[||\mathcal{DM}||^*>\frac{\Xi (\mu + a t)}{\sqrt{n_1 n_2 n_3}}|(\mathcal{H}_l^{'})]\le \exp(-\frac{t^2}{2}).
+\end{equation}
+Since this estimate holds for any $\mathcal{H}_l^{'}$, it holds unconditionally:
+\begin{equation}
+\mathbb{P}[||\mathcal{DM}||^*>\frac{\Xi (\mu + a t)}{\sqrt{n_1 n_2 n_3}}]\le \exp(-\frac{t^2}{2}).
+\end{equation}
+Note that $\Xi$ is a $||\mathcal{P}_S \mathcal{M}||_F$-Lipschitz function of i.i.d. Gaussian sequence $(\mathcal{H}_{1}^{'},\cdots,\mathcal{H}_{\gamma}^{'})$, with
+\begin{equation}
+\begin{split}
+&|\Xi(\mathcal{H}_1^{'},\cdots,\mathcal{H}_{\gamma}^{'})-\Xi(\tilde{\mathcal{H}_1^{'}},\cdots,\tilde{\mathcal{H}_{\gamma}^{'}})| \\
+=& |\sqrt{\sum_{l=1}^r\langle\mathcal{P}_S\mathcal{H}_l^{'},\mathcal{M}\rangle^2}
+-\sqrt{\sum_{l=1}^r\langle\mathcal{P}_S\tilde{\mathcal{H}_l^{'}},\mathcal{M}\rangle^2}|  \\
+\le & \sqrt{\sum_{l=1}^r\rangle\mathcal{P}_S(\tilde{\mathcal{H}_l^{'}}-\mathcal{H}_l^{'}),\mathcal{M}\rangle^2} \\
+\le & ||\mathcal{P}_S\mathcal{M}||_F \sqrt{\sum_{l=1}^r||\mathcal{H}_l^{'}-\tilde{\mathcal{H}_l^{'}}||^2}.
+\end{split}
+\end{equation}
+Moreover,
+\begin{equation}
+\mathbb{E}(\Xi)\le (\mathbb{E}[\Xi^2])^{1/2}=||\mathcal{P}_S \mathcal{M}||_F
+\frac{\gamma}{n_1 n_2 n_3}.
+\end{equation}
+From Lipschitz concentration,
+\begin{equation}
+\mathbb{P}[\Xi>\mathbb{E}[\Xi]+s||\mathcal{P}_S \mathcal{M}||_F] \le \exp(-\frac{s^2 n_1 n_2 n_3}{2}),
+\end{equation}
+let $s = \sqrt{\frac{\gamma}{n_1 n_2 n_3}}$ we can get that
+\begin{equation}
+\mathbb{P}[\Xi > 2||\mathcal{P}_S  \mathcal{M}||_F \sqrt{\frac{\gamma}{n_1 n_2 n_3}}]\le \exp(-\frac{\gamma}{2}).
+\end{equation}
+Above all,
+\begin{equation}
+\begin{split}
+&\mathbb{P}[||\frac{n_1 n_2 n_3}{\gamma}\mathcal{P}_{S^{\bot}} \mathcal{A}\mathcal{P}_S\mathcal{M}||^{*}\\
+&>10 ||\mathcal{P}_S\mathcal{M}||_F \frac{\nu+\sqrt{\log(n_1 n_3)}a}{\sqrt{\gamma}}] \\
+\le &(n_1 n_3)^{-10}+\exp(-\frac{\gamma}{2}).\\
+\end{split}
+\end{equation}
+\end{proof}
+
+\begin{proof}
+Consider the space $S = T_1 + \cdots + T_{\tau}+span(\tilde{\Lambda})$, then $S$ is a linear subspace of dimension at most $dim(T_1+\cdots+T_{\tau})+1$ containing $\tilde{\Lambda}$. We will generate a new certificate $\Lambda_{*}$. The new certificate should inherit good properties of $\hat{\Lambda}$ on $T_1+\cdots+T_{\tau}$ and satisfies
+\begin{equation}
+\mathcal{P}_{Q^{\bot}}\Lambda_{*}=0.
+\end{equation}
+To this end, we will set
+\begin{equation}
+\Lambda_0 = 0.
+\end{equation}
+We will generate inductively a sequence $(\Lambda_j)_{j=1,\cdots,k}$ for appropriate $k$, such that with high probability $\Lambda_{*}=\Lambda_k$ is the desired certificate. Define the error at step $j$ to be
+\begin{equation}
+\mathcal{E}_j = \mathcal{P}_S [\Lambda_j]-\hat{\Lambda}\in S.
+\end{equation}
+We will generate a sequence of corrections which drive $\mathcal{E}_j$ towards zero.
+
+By orthogonal invariance, $Q$ is equal in distribution to the linear span of $\mathcal{H}_1,\cdots, \mathcal{H}_{dim(Q)}$, where $\mathcal{H}_j$ are independent i.i.d. $\mathcal{N}(0,1/n_1 n_2 n_3)$ random tensors. Choose from ${1,\cdots,dim(Q)}$,
+\begin{equation}
+k = \lceil 3 \log_2(n_1 n_3)\rceil,
+\end{equation}
+disjoint subsets $I_1,\cdots,I_k$ of size
+\begin{equation}
+\gamma = \lfloor \frac{dim(Q)}{k} \rfloor.
+\end{equation}
+Our choice of constant ensures that $2^{-k}\le (n_1 n_3)^{-3}.$
+we can make sure that
+\begin{equation}
+\gamma \ge C_3 \cdot dim(S)
+\end{equation}
+ where $C_3$ is a numerical constant. Since $dim(Q)\ge C_{sub}\cdot dim(T_1 + \cdots + T_{\tau})\cdot \log(n_1 n_3)$, once $C_3$ is chosen, we ensure that $C_{sub}$ is large enough that $\gamma \ge C_3 \cdot dim(S)$.
+
+ Let $\mathcal{A}_j:\mathbb{R}^{n_1 \times n_2 \times n_3}\rightarrow\mathbb{R}^{n_1 \times n_2 \times n_3}$ denote the semidefinite operator that acts via
+ \begin{equation}
+ \mathcal{A}_j[\cdot] = \sum_{i\in I_j}\mathcal{H}_i\langle\mathcal{H}_i,\cdot\rangle.
+ \end{equation}
+Note that $\mathbb{E}[\mathcal{A}_j]=(\gamma/n_1 n_2 n_3)\mathcal{I}$. For $j=1,\cdots,k$, let
+\begin{equation}
+\begin{split}
+\Lambda_j &= \Lambda_{j-1} - \frac{n_1 n_2 n_3}{\gamma}\mathcal{A}_j E_{j-1}\\
+&= -\sum^j_{i=1}\frac{n_1 n_2 n_3}{\gamma}\mathcal{A}_i E_{i-1}.
+\end{split}
+\end{equation}
+Then we have
+\begin{equation}
+\begin{split}
+E_j &= \mathcal{P}_S[\Lambda_j]-\hat{\Lambda}\\
+&= \mathcal{P}_S[\Lambda_{j-1}]-\hat{\Lambda}-\mathcal{P}_S \frac{n_1 n_2 n_3}{\gamma}\mathcal{A}_j E_{j-1}\\
+&= \mathcal{P}_S (\mathcal{I}-\frac{n_1 n_2 n_3}{\gamma}\mathcal{A}_j)\mathcal{P}_S E_{j-1}.
+\end{split}
+\end{equation}
+We may further write
+\begin{equation}
+\begin{split}
+\Lambda_k &= \mathcal{P}_S [\Lambda_k]+\mathcal{P}_{S^{\bot}} [\Lambda_k]\\
+& = \hat{\Lambda}+E_k-\sum^k_{j=1}\mathcal{P}_{S^{\bot}}\frac{n_1 n_2 n_3}{\gamma}\mathcal{A}_j \mathcal{P}_S E_{j-1}.
+\end{split}
+\end{equation}
+(i) Driving $E$ to zero. Ensuring that $C_3$ is sufficiently large that the hypotheses of lemma $\ref{prob1}$ are verified, we have that with probability of at least $1-C_4 \exp(-c_1 \gamma)$,
+\begin{equation}
+||\mathcal{P}_S(\mathcal{I}-\frac{n_1 n_2 n_3}{\gamma}\mathcal{A}_j)\mathcal{P}_S|| = ||\mathcal{P}_S \frac{n_1 n_2 n_3}{\gamma} \mathcal{A}_j \mathcal{P}_S -\mathcal{P}_S ||\le \frac{1}{2}.
+\end{equation}
+Hence, we have that $||E_j||_F\le \frac{1}{2}||E_{j-1}||_F$ for each $j$, on the complement of a bad event $\mathcal{E}_{err}$ of probability of at most $C_4 k \exp(-c_1 \gamma)$. On $\mathcal{E}_{err}^c$, we have
+\begin{equation}
+||E_k||_F \le 2^{-k}||\hat{\Lambda}||_F, \sum_{j=1}^k ||E_j||_F \le 2||\hat{\Lambda}||_F.
+\end{equation}
+(ii)Analysis of $\alpha^{'}$. From the definition, we may set $\alpha^{'}=\max_i||\mathcal{P}_{T_i}\Lambda_k -\lambda_i S_i||_F$. On $\mathcal{E}_{err}^c$,
+\begin{equation}
+\begin{split}
+||\mathcal{P}_{T_i}\Lambda_k -\lambda_i S_i||_F &= ||\mathcal{P}_{T_i}[\hat{\Lambda}+E_k]-\lambda_i S_i||_F\\
+&\le ||\mathcal{P}_{T_i}\hat{\Lambda} -\lambda_i S_i||_F+||E_k||_F\\
+&\le ||\mathcal{P}_{T_i}\hat{\Lambda} -\lambda_i S_i||_F+2^{-k}||\hat{\Lambda}||_F\\
+&\le ||\mathcal{P}_{T_i}\hat{\Lambda} -\lambda_i S_i||_F+(n_1 n_3)^{-3}||\hat{\Lambda}||_F\\
+&\le \alpha+(n_1 n_3)^{-3}||\hat{\Lambda}||_F.
+\end{split}
+\end{equation}
+(iii)Analysis of $\beta^{'}$.
+\begin{equation}
+\beta^{'}=\max_{i=1,\cdots,\tau}\lambda_i^{-1}||\Lambda_k||^{*}_{(i)}.
+\end{equation}
+From triangle inequality, we have that
+\begin{equation}
+\begin{split}
+||\Lambda_k||^{*}_{(i)}\le& ||\hat{\Lambda}||^{*}_{(i)}+\sqrt{n_3}||E_k||_F \\
+ +&\sum_{j=1}^k ||\mathcal{P}_{S^{\bot}}\frac{n_1 n_2 n_3}{\gamma}\mathcal{A}_j \mathcal{P}_S E_{j-1}||_{(i)}^{*}.\\
+\end{split}
+\end{equation}
+Applying lemma $\ref{prob2}$, this is bounded by
+\begin{equation}
+\begin{split}
+&||\Lambda_k||^{*}_{(i)}\\
+\le& \lambda_i \beta+2^{-k}\sqrt{n_3}||E_0||_F  \\
+&+10\frac{\nu_i+a_i \sqrt{\log(n_1 n_3)}}{\sqrt{\gamma}}\sum_{j=1}^k ||E_{j-1}||_F\\
+\le& \lambda_i \beta +21\frac{\nu_i+a_i\sqrt{\log(n_1 n_3)}}{\sqrt{\gamma}}||\hat{\Lambda}||_F,\\
+\end{split}
+\end{equation}
+on the complement of an event $\mathcal{E}_{\infty}$ of probability of at most $k(n_1 n_3)^{-10}+k\exp(-\gamma/2)+\mathbb{P}[\mathcal{E}_{err}]$. Since $\gamma \ge c\cdot dim(Q)/\log(n_1 n_3)$, for some numerical constant $C_5$,
+\begin{equation}
+\begin{split}
+&\lambda_i^{-1}||\Lambda_k||^{*}_{(i)}\\
+\le &\beta + C_5 \frac{\nu_i + a_i\sqrt{ \log(n_1 n_3)}}{\lambda_i}(\frac{\log(n_1 n_3)||\hat{\Lambda}||_F^2}{dim(Q)})^{1/2}.\\
+\end{split}
+\end{equation}
+\end{proof}
+
+\section{Proof of Proposition \ref{prop}}
+
+
+Under the hypotheses, (i) follows immediately from Corollary 4.2 of $\cite{LFC}$. $\cite{LFC}$ constructs a certificate $\Lambda_{PCP}$ in three parts as
+\[\Lambda_{PCP} = \mathcal{U} \ast \mathcal{V}^* + \mathcal{W}^{\mathcal{L}} + \mathcal{W}^{\mathcal{S}}.\]
+Since $\mathcal{W}^{\mathcal{L}}, \mathcal{W}^{\mathcal{S}} \in T^{\bot}$, \[ ||\mathcal{P}_T \Lambda_{PCP} -  \mathcal{U} \ast \mathcal{V}^*||_F = 0.\]
+Moreover, $\mathcal{P}_{\Omega}\mathcal{W}^{\mathcal{S}}=\lambda  \,sign(\mathcal{S}_0)$. So, we have
+\[||\mathcal{P}_{\Omega}\Lambda_{PCP} - \lambda \, sign(\mathcal{S}_0)||_F=||\mathcal{P}_{\Omega} [\mathcal{U} \ast \mathcal{V}^* + \mathcal{W}^{\mathcal{L}}]||_F.\]
+To prove proposition $\ref{prop}$, it is suffice to show that with high probability the following properties are satisfied:
+
+(I) Structure constraint:
+\begin{equation} \label{struc}
+{ ||\mathcal{P}_{\Omega} [\mathcal{U} \ast \mathcal{V}^* + \mathcal{W}^{\mathcal{L}}]||_F \le \frac{1}{(n_1 n_3)^2}.}
+\end{equation}
+
+(II) Dual norm constraints:
+\begin{equation} \label{dual1}
+{||\mathcal{P}_{T^{\bot}} \mathcal{W}^{\mathcal{L}}|| \le \frac{1}{8}, \quad ||\mathcal{P}_{\Omega^c}[\mathcal{U} \ast \mathcal{V}^* + \mathcal{W}^{\mathcal{L}}]||_{\infty} \le \frac{\lambda}{8} }
+\end{equation}
+and
+\begin{equation}\label{dual2}
+{||\mathcal{P}_{T^{\bot}}\mathcal{W}^{\mathcal{S}}|| \le \frac{1}{8}, \quad ||\mathcal{P}_{\Omega^c} \mathcal{W}^{\mathcal{S}}||_{\infty}\le \frac{\lambda}{8}.}
+\end{equation}
+
+(III) Frobenius norm bounds: We have $ ||\Lambda_{PCP}||_F \le ||\mathcal{U} \ast \mathcal{V}^*||_F + ||\mathcal{W}^{\mathcal{L}}||_F + ||\mathcal{W}^{\mathcal{S}}||_F. $ The first term is $\sqrt{r}.$ We will show that
+\begin{equation} \label{lbound}
+{|| \mathcal{W}^{\mathcal{L}}||_F \le 3\sqrt{r},}
+\end{equation}
+\begin{equation} \label{sbound}
+{||\mathcal{W}^{\mathcal{S}}||_F \le \frac{4}{3} \lambda \sqrt{||\mathcal{S}_0||_0}.}
+\end{equation}
+In paragraph (i)(ii), we show that with slight changes in the constants, (I)(II) are satisfied with a high probability. In the end of paragraph (ii) and paragraph (iii), we show $(\ref{lbound})$ and $(\ref{sbound})$.
+
+(i) Review of lemma 3.4 in $\cite{LFC}$.
+
+\noindent Set $\mathcal{Z}_j = \mathcal{U} \ast \mathcal{V}^* - \mathcal{P}_T \mathcal{Y}_j$ obeying
+\[\mathcal{Z}_j = (\mathcal{P}_T - q^{-1}\mathcal{P}_T \mathcal{P}_{\Omega_j}\mathcal{P}_T)\mathcal{Z}_{j-1}.\]
+Note that when $q \le C_0 \epsilon^{-2} \frac{\mu r \log(n_1 n_3)}{n_2 n_3}$, we have
+\begin{equation}
+\begin{split}
+&||\mathcal{Z}_j||_{\infty}\le \epsilon^j ||\mathcal{U} \ast \mathcal{V}^*||_{\infty},  \\
+&||\mathcal{Z}_j||_F\le \epsilon^j ||\mathcal{U} \ast \mathcal{V}^*||_F \le \epsilon^j \sqrt{r},
+\end{split}
+\end{equation}
+by lemma 4.1 and lemma 4.3 in $\cite{LFC}$. We assume $\epsilon \le e^{-1}$.
+We have
+\begin{equation}
+{||\mathcal{W}^{\mathcal{L}}|| \le C_1 \epsilon, \\}
+\end{equation}
+for some numerical constant $C_1$.
+
+\noindent Since $\mathcal{P}_{\Omega}(\mathcal{U}\ast\mathcal{V}^* +\mathcal{P}_{T^{\bot}}\mathcal{Y}_{j_0})=\mathcal{P}_{\Omega}(\mathcal{Z}_{j_0})$ and $||\mathcal{Z}_{j_0}||_F \le \epsilon^{j_0} \sqrt{r},$
+\begin{equation}
+\begin{split}
+||\mathcal{P}_{\Omega}(\mathcal{U}\ast\mathcal{V}^* +\mathcal{P}_{T^{\bot}}\mathcal{Y}_{j_0})|| &\le \epsilon^{j_0} \sqrt{r} \\
+& \le \epsilon^{j_0} \sqrt{\frac{\rho_r n_2 n_3}{\mu (\log(n_1 n_3))^2}}\\
+\end{split}
+\end{equation}
+Now we set $j_0 =3 \lceil \log(n_1 n_3) \rceil $, $(\ref{struc})$ is achieved.
+
+\noindent We have $\mathcal{U}\ast\mathcal{V}^* + \mathcal{W}^{\mathcal{L}} = \mathcal{Z}_{j_0}+\mathcal{Y}_{j_0}$.
+
+\noindent Since $||\mathcal{Z}_{j_0}||_{\infty}\le \epsilon^{j_0} ||\mathcal{U} \ast \mathcal{V}^*||_{\infty}$ and $||\mathcal{U} \ast \mathcal{V}^*||_{\infty} \le \sqrt{\frac{\mu r}{n_1 n_2 n_3 ^2}}$, combined with $(\ref{rank})$ we have
+\[||\mathcal{Z}_j||_{\infty}\le \epsilon^{j_0} \sqrt{\frac{\rho_r}{(\log(n_1 n_3))^2}}\lambda \le \frac{\lambda}{16}.\]
+$\cite{LFC}$ has established that \[||\mathcal{Y}_{j_0}||_{\infty}\le C_2 \frac{\epsilon^2}{\sqrt{\mu r (\log(n_1 n_3))^2}},\] for some numerical constant $C_2$.
+
+\noindent $||\mathcal{Y}_{j_0}||\le \frac{\lambda}{16}$ if
+\begin{equation}
+{\epsilon \le C_3 (\frac{\mu r (\log(n_1 n_3))^2}{n_1 n_3})^{1/4}}.
+\end{equation}
+$(\ref{dual1})$ is proved with sufficiently small $\epsilon$ (provided that $\rho_r$ is sufficiently small).
+
+(ii) Review of lemma 3.5 in $\cite{LFC}$.
+
+Denote $\mathcal{M} = sign(\mathcal{S}_0)$.
+
+By construction,
+\begin{equation}
+\begin{split}
+\mathcal{W}^{\mathcal{S}} &= \lambda \mathcal{P}_{T^{\bot}}\mathcal{M} + \lambda\mathcal{P}_{T^{\bot}}\sum_{k\ge1} (\mathcal{P}_{\Omega}\mathcal{P}_{T}\mathcal{P}_{\Omega})^k \mathcal{M} \\
+:&= \mathcal{P}_{T^{\bot}} \mathcal{W}_0^{\mathcal{S}} +\mathcal{P}_{T^{\bot}} \mathcal{W}_1^{\mathcal{S}}.
+\end{split}
+\end{equation}
+$\cite{LFC}$ have proved that $||\mathcal{P}_{T^{\bot}} \mathcal{W}_0^{\mathcal{S}}||, ||\mathcal{P}_{T^{\bot}} \mathcal{W}_1^{\mathcal{S}}||$ are small enough when $\rho$ is sufficiently small. Therefore $||\mathcal{W}^{\mathcal{S}}||\le 1/8$.
+
+$\cite{LFC}$ also proved that $||\mathcal{P}_{\Omega^{\bot}}\mathcal{W}^{\mathcal{S}}||_{\infty}\le t\lambda$ holds with high probability when $\rho_r$ is sufficiently small. So we set $t = \frac{1}{8}$ here.
+
+$\mathcal{W}^{\mathcal{S}}$ is constructed by Neumann Series \[\mathcal{W}^{\mathcal{S}} = \lambda\mathcal{P}_{T^{\bot}}\sum_{k\ge0} (\mathcal{P}_{\Omega}\mathcal{P}_{T}\mathcal{P}_{\Omega})^k \mathcal{M} \\.\] So,
+\begin{equation}
+{||\mathcal{W}^{\mathcal{S}}||_F \le \frac{||\lambda sign(\mathcal{S}_0)||_F}{1-||\mathcal{P}_{\Omega}\mathcal{P}_T||^2}}\le\frac{4}{3}\lambda \sqrt{||\mathcal{S}_0||_0}.
+\end{equation}
+
+(iii) Bounding $||\mathcal{W}^{\mathcal{L}}||_F$.
+Since $\mathcal{W}^{\mathcal{L}}=\mathcal{P}_{T^{\bot}}\sum_j q^{-1} \mathcal{P}_{\Omega_j}\mathcal{Z}_{j-1}$, it is enough to control the Frobenius norm $q^{-1} \mathcal{P}_{\Omega_j}\mathcal{Z}_{j-1}$ for each j. Note that
+\begin{equation}
+\begin{split}
+&||q^{-1} \mathcal{P}_{\Omega_j}\mathcal{Z}_{j-1}||^2_F \\ =&||\mathcal{Z}_{j-1}||^2_F + \sum_{kls} (q^{-1}\delta_{kls}-1)[\mathcal{Z}_{j-1}]^2_{kls}  \\
+\doteq &||\mathcal{Z}_{j-1}||^2_F + \sum_{kls}\mathcal{H}_{kls},\\
+\end{split}
+\end{equation}
+where $\delta_{kls}$ is an indicator for the event $(k,l,s)\in \Omega_j$. Then $\mathbb{E}[\mathcal{H}_{kls}]=0, |\mathcal{H}_{kls}| \le q^{-1}||\mathcal{Z}_{j-1}||^2_{\infty}$ almost surely and $\mathbb{E}[\mathcal{H}_{kls}^2]\le q^{-1}[\mathcal{Z}_{j-1}]_{kls}^4.$ Summing, we have
+\begin{equation}
+{{\sum_{kls}\mathbb{E}[\mathcal{H}_{kls}^2]\le q^{-1}||\mathcal{Z}_{j-1}||^2_{\infty}||\mathcal{Z}_{j-1}||^2_F}.}
+\end{equation}
+By Bernstein's inequality,
+\begin{equation}
+\begin{split}
+& \mathbb{P}[||q^{-1} \mathcal{P}_{\Omega_j}\mathcal{Z}_{j-1}||^2_F >||\mathcal{Z}_{j-1}||^2_F+t] \\
+\le & \exp(-\frac{t^2}{2(q^{-1}||\mathcal{Z}_{j-1}||^2_{\infty}||\mathcal{Z}_{j-1}||^2_F+\frac{1}{3}q^{-1}||\mathcal{Z}_{j-1}||^2_{\infty}t)}) \\
+= & \exp(-\frac{t^2}{2q^{-1}||\mathcal{Z}_{j-1}||^2_{\infty}(||\mathcal{Z}_{j-1}||^2_F+\frac{t}{3})}). \\
+\end{split}
+\end{equation}
+By setting
+\begin{equation}
+\begin{split}
+t_j = C_4 \max( &||\mathcal{Z}_{j-1}||^2_{\infty}q^{-1}\log(n_1 n_3), \\ &||\mathcal{Z}_{j-1}||_{\infty}||\mathcal{Z}_{j-1}||_F\sqrt{q^{-1}\log(n_1 n_3)}),\\
+\end{split}
+\end{equation}
+with appropriate numerical constant $C_4$, we can ensure that for each j, \[\mathbb[||q^{-1} \mathcal{P}_{\Omega_j}\mathcal{Z}_{j-1}||^2_F >||\mathcal{Z}_{j-1}||^2_F+t_j] \le (n_1 n_3)^{-11}.\]
+Since we have $q > c/\log(n_1 n_3)$ for some positive numerical constant c, on an event with an overall probability of at least $1- j_0 (n_1 n_3)^{-11},$
+\begin{equation}
+\begin{split}
+&||\mathcal{W}^{\mathcal{L}}||_F \\
+\le & \sum_{j=1}^{j_0}||q^{-1}\mathcal{P}_{\Omega_j}\mathcal{Z}_{j-1}||_F \\
+\le &\sum_{j=1}^{j_0} ||\mathcal{Z}_{j-1}||_F + \sqrt{t_j} \\
+\le & \sum_{j=1}^{j_0} ||\mathcal{Z}_{j-1}||_F + C_5 ||\mathcal{Z}_{j-1}||_{\infty} \log(n_1 n_3) \\
+& + C_6 \sqrt{||\mathcal{Z}_{j-1}||_{\infty}||\mathcal{Z}_{j-1}||_F\log(n_1 n_3)} \\
+\le & 2\sqrt{r} + 2C_5 \log(n_1 n_3)\sqrt{\frac{\mu r}{n_1 n_2 n_3^2}} \\
+& + C_6 \sqrt{\log(n_1 n_3)} \sum^{j_0}_{j=1} \epsilon^j ||\mathcal{Z}_0||_{\infty}^{1/2}||\mathcal{Z}_0||_{F}^{1/2} \\
+\le & 2\sqrt{r} + 2C_5 \log(n_1 n_3)\sqrt{\frac{\mu r}{n_1 n_2 n_3^2}} \\
+& + 2 C_6 \sqrt{\log(n_1 n_3)} \sqrt[4]{\frac{\mu r^2}{n_1 n_2 n_3^2}}. \\
+\end{split}
+\end{equation}
+Recalling $(\ref{rank})$ and ensuring $\rho_r$ is sufficiently small, we can conclude that $||\mathcal{W}^{\mathcal{L}}||_F \le 3\sqrt{r}.$
+
+% use section* for acknowledgment
+\section*{Acknowledgment}
+
+
+The authors would like to thank...
+
+
+% Can use something like this to put references on a page
+% by themselves when using endfloat and the captionsoff option.
+\ifCLASSOPTIONcaptionsoff
+  \newpage
+\fi
+
+
+
+\begin{thebibliography}{1}
+
+\bibitem{KB}Kolda T G, Bader B W. Tensor decompositions and applications[J]. SIAM review, 2009, 51(3): 455-500.
+\bibitem{KBH}Kilmer M E, Braman K, Hao N, et al. Third-order tensors as operators on matrices: A theoretical and computational framework with applications in imaging[J]. SIAM Journal on Matrix Analysis and Applications, 2013, 34(1): 148-172.
+\bibitem{CLM}Candès E J, Li X, Ma Y, et al. Robust principal component analysis?[J]. Journal of the ACM (JACM), 2011, 58(3): 11.
+\bibitem{LFC}Lu C, Feng J, Chen Y, et al. Tensor robust principal component analysis: Exact recovery of corrupted low-rank tensors via convex optimization[C]//Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2016: 5249-5257.
+\bibitem{WGM}Wright J, Ganesh A, Min K, et al. Compressive principal component pursuit[J]. Information and Inference: A Journal of the IMA, 2013, 2(1): 32-68.
+\bibitem{VR}Vershynin, R. (2011) Introduction to the
+    non-asymptotic analysis of random matrices. Available at
+http://www-personal.umich.edu/ romanv/papers/non-asymptotic-rmt-plain.pdf.
+\bibitem{LM}Laurent, B. $\&$ Massart, P. (2000) Adaptive estimation of a quadratic function by model selection. Ann. Statist., 28, 1302$-$1338.
+\bibitem{LM2}Ledoux, M. (2001) The Concentration of Measure Phenomenon. Providence, RI: American Mathematical
+Society.
+\bibitem{DS}Davidson, K. $\&$ Szarek, S. (2001) Local operator theory, random matrices and banach spaces. Handbook of
+the Geometry of Banach Spaces (W. B. Johnson $\&$ J. Lindenstrauss eds) Elsevier Science, pp. 317$-$366.
+\bibitem{VR2}Vershynin, R. (2009) Lectures on geometric functional analysis. Available at http://www-personal.umich.
+edu/ romanv/papers/GFA-book/GFA-book.pdf.
+\bibitem{MatrixADMM} Trémoulhéac B, Dikaios N, Atkinson D, et al. Dynamic MR Image Reconstruction–Separation From Undersampled (${\bf k}, t $)-Space via Low-Rank Plus Sparse Prior[J]. IEEE transactions on medical imaging, 2014, 33(8): 1689-1701.
+\end{thebibliography}
+
+\begin{IEEEbiography}{Michael Shell}
+Biography text here.
+\end{IEEEbiography}
+
+% if you will not have a photo at all:
+\begin{IEEEbiographynophoto}{John Doe}
+Biography text here.
+\end{IEEEbiographynophoto}
+
+
+
+\end{document}
+
+

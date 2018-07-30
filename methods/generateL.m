@@ -11,6 +11,9 @@ function [X, L, S] = generateL(n,r,n3,rhoS)
 %
 % return: L: dim = [n, n, n3], tensor tubal rank of `L` is r
 %         S: dim = [n, n ,n3], sampled from i.i.d. Bernoulli +-1 entries
+%
+% Reference: Tensor Robust Principal Component Analysis: Exact Recovery of 
+% Corrupted Low-Rank Tensors via Convex Optimization
 
 P = randn([n,r,n3])/sqrt(n);
 Q = randn([r,n,n3])/sqrt(n);

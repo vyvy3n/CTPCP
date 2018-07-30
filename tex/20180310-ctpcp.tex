@@ -1,0 +1,352 @@
+\documentclass[journal,transmag]{IEEEtran}
+\hyphenation{op-tical net-works semi-conduc-tor}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{caption}                % 这四行插入algorithm代码
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}     % 这四行插入algorithm代码
+%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Thoerem}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{proposition}{Proposition}[section]
+\theoremstyle{plain}
+\renewcommand\thesection{\arabic{section}}
+\begin{document}
+
+\title{Compressive tensor principal component pursuit using t-SVD}
+\author{\IEEEauthorblockN{Haodong Sun\IEEEauthorrefmark{1}, Tianwei Yue\IEEEauthorrefmark{2}, Yao Wang\IEEEauthorrefmark{3,$\ast$}, Shaobo Lin\IEEEauthorrefmark{4}}
+% \IEEEauthorblockA{\IEEEauthorrefmark{1}\IEEEauthorrefmark{2}}
+}
+
+% The paper headers
+% \markboth{Journal of \LaTeX\ Class Files,~Vol.~14, No.~8, August~2015}%
+% {Shell \MakeLowercase{\textit{et al.}}: Bare Demo of IEEEtran.cls for IEEE Transactions on Magnetics Journals}
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+\center{Abstract}
+\end{abstract}
+\begin{abstract}
+This paper considers the problem of recovering a data tensor, which is the superposition of a low-rank component and a sparse component, from a small set of linear measurements. The interest in this problem is motivated by applications in compressed sensing of high-dimensional data with low-complexity structures. Our model is based on tensor-Singular Value Decomposition (t-SVD) and its induced tensor nuclear norm. In fact, we can derive a new notion of tensor rank by this factorization, denoted as tensor tubal rank. In this work, we prove that under suitable assumptions we can recover each component of the target tensor exactly by solving a convex problem with overwhelming probability. In the end, we show the result of numerical experiments conducted on
+several real data sets to illustrate the merit of our model.
+\end{abstract}
+
+%\begin{IEEEkeywords}
+%IEEE, IEEEtran, IEEE Transactions on Magnetics, journal, \LaTeX, magnetics, paper, template.
+%\end{IEEEkeywords}
+}
+
+
+\maketitle
+
+
+\IEEEdisplaynontitleabstractindextext
+% \IEEEdisplaynontitleabstractindextext has no effect when using
+% compsoc or transmag under a non-conference mode.
+
+
+
+% For peer review papers, you can put extra information on the cover
+% page as needed:
+% \ifCLASSOPTIONpeerreview
+% \begin{center} \bfseries EDICS Category: 3-BBND \end{center}
+% \fi
+%
+% For peerreview papers, this IEEEtran command inserts a page break and
+% creates the second title. It will be ignored for other modes.
+\IEEEpeerreviewmaketitle
+
+
+
+\section{Introduction}
+\IEEEPARstart{R}{ecently} there has been a tremendous amount of interest in the problem of exploiting low-complexity structure in data lying in high-dimensional space, such as sparse signals or low-rank structures. Data in the form of multidimensional array is also referred as tensor. Naturally, we represent data in this way to avoid the loss of structure information. In this work, we mainly focus on the third order tensor. The huge progress made in compressed sensing has showed that it is possible to perfectly recover low-complexity signals from a small set of partially sampled measurements or corrupted observations. Generally, the tensor recovery is achieved by solving a optimal problem whose objective function is a weighted combination of several regularizations revealing the corresponding low-complexity properties. In fact, for exploiting low-rank structure, the strategy of recovery greatly relies on algebraic decomposition methods, such as CANDECOMP/PARAFAC(CP) decomposition$\cite{KB}$ and Tucker decomposition$\cite{KB}$. Here we use t-SVD proposed in $\cite{KBH}$ due to its good properties.
+
+Robust Principle Component Analysis (RPCA) proposed in $\cite{CLM}$ is an efficient algorithm with theoretical guarantee for exact recovery. Suppose that we have a data matrix $X\in \mathbb{R}^{n_1\times n_2}$ which is the superposition of a low-rank component $L_0$ and a sparse component $S_0$. It has been proved in $\cite{CLM}$ that if $L_0$ meet some incoherent conditions and $S_0$ satisfies some probabilistic assumptions, one can exactly recover both components with high probability by solving a convex program called Principal Component Pursuit (PCP):
+\begin{equation}
+\min_{L,S}||L||_{*}+\lambda ||S||_1, \quad s.t.\, X=L+S,
+\end{equation}
+where $||L||_*$ denotes the nuclear norm and $||S||_1$ denotes the $l$-1 norm, $\lambda=1/\sqrt{\max(n_1,n_2)}$. By the standard Alternating Direction Method of Multipliers (ADMM), the PCP can be solved easily in polynomial time. However, this method can only be used to manipulate two-dimensional data. To overcome this shortcoming, Tensor Robust Principle Component Analysis (TRPCA) was proposed in $\cite{LFC}$. Moreover, in many scenarios it is meaningful to develop models recovering low-rank and sparse components from incomplete measurements. The compressive RPCA was studied in $\cite{WGM}$ for two-dimensional data. Based on these works, it is interesting to consider the compressive RPCA problem for third order tensor.
+
+In this paper, we study the Tensor Compressive Principal Component Pursuit (TCPCP). Consider we have a third order tensor $\mathcal{X}\in \mathbb{R}^{n_1\times n_2 \times n_3}$ ($n_1=n_2$) such that $\mathcal{X}=\mathcal{L}_0+\mathcal{S}_0$ where $\mathcal{L}_0$ is the low-rank component and $\mathcal{S}_0$ is the sparse component. We prove that under some assumptions on $\mathcal{L}_0$, $\mathcal{S}_0$ and the dimension of sampling space, one can exactly recover both low-rank and sparse components from undersampled measurements by solving the following optimal problem:
+\begin{equation} \label{TCPCP}
+\min_{\mathcal{L},\mathcal{\mathcal{S}}} ||\mathcal{L}||_*+\lambda ||\mathcal{S}||_1, \quad s.t. \,\mathcal{P}_Q(\mathcal{L}_0+\mathcal{S}_0)=\mathcal{P}_Q(\mathcal{L}+\mathcal{S}),
+\end{equation}
+where $Q$ is randomly chosen subspace of $\mathbb{R}^{n_1\times n_2 \times n_3}$, $\mathcal{P}_Q$ is the sampling operator, $\mathcal{L}_0,\mathcal{S}_0$ are low-rank and sparse components respectively. The tensor nuclear norm in this model is defined based on t-SVD factorization.
+
+\subsection{Related Work}
+
+\subsubsection{Tensor Principle Component Analysis using t-SVD}
+Consider $\mathcal{X}\in \mathbb{R}^{n_1\times n_2 \times n_3}$ with $n_1 \ge n_2$. Suppose that $\mathcal{X}$ can be decomposed as the sum of a low-rank tensor $\mathcal{L}_0$ and a sparse tensor $\mathcal{S}_0$. $\cite{LFC}$ tries to recover both components by solving the following program called Tensor PCP (TPCP):
+\begin{equation}
+\min_{\mathcal{L},\mathcal{\mathcal{S}}} ||\mathcal{L}||_*+\lambda ||\mathcal{S}||_1, \quad s.t. \,\mathcal{X}=\mathcal{L}+\mathcal{S},
+\end{equation}
+ where $\lambda=1/\sqrt{n_1 n_3}$. The tensor nuclear norm here is induced by t-SVD.
+
+In $\cite{LFC}$ the authors show that for $\mu$-incoherent $\mathcal{L}_0$ with tubal rank on the order of $n_2 n_3/\mu(\log n_1 n_3)^2$ and $\mathcal{S}_0$ whose number of nonzero entries is on the order of $n_1 n_2 n_3$, the exact recovery is guaranteed with overwhelming probability. Similar to $\cite{CLM}$, they make an assumption that the locations of nonzero entries of $\mathcal{S}_0$ are randomly distributed. Note that when $n_3$ is equal to 1, the TRPCA case reduces to RPCA case. So we can view TRPCA as an extension of RPCA. This property is closed related with t-SVD and we will introduce its conception and properties later.
+\\
+\subsubsection{Compressive Principle Component Pursuit}
+Let $L_0, S_0\in \mathbb{R}^{n_1\times n_2}$ with $n_1\ge n_2$. Suppose $L_0$ is $\mu$-incoherent and its rank is on the order of $n_2/\mu log^2 n_1$, and the sparsity of $S_0$ is on the order of $n_1 n_2$. Similarly we assume that the entries in support set of $S_0$ are randomly distributed.
+
+$\cite{WGM}$ studies the following convex program called Compressive Principle Component Pursuit:
+\begin{equation}
+\min_{L,S}||L||_{*}+\lambda ||S||_1, \quad s.t.\, D=P_Q(L+S),
+\end{equation}
+where $Q$ is a subspace of $\mathbb{R}^{n_1\times n_2}$, $P_Q$ is the sampling operator, $\lambda=1/\sqrt{n_1}$. With the assumptions above, $\cite{WGM}$ gives a tight bound on the number of measurements needed to recover $(L_0, S_0)$ from $D$ by solving CPCP. This bound is on the order of $(\rho n_1 n_2 + n_1 r)\cdot \log^2 n_1$, where $\rho$ is the fraction of nonzero entries of $S_0$, $r$ is the rank of $L_0$. The bound is closely related to the intrinsic degrees of freedom in $(L_0, S_0)$.
+\subsection{Organization of the Paper}
+The rest of this paper is organized as follows. Section 2 introduces some notations and preliminaries. We show the main result in section 3 and delay the proof to section 4. In section 5 we report the results of several experiments. Finally we conclude the whole work and outline future research.
+\section{Notations and Preliminaries}
+Before the main part of this article, we firstly introduce the notations used throughout the paper and some basic definitions and theorems about tensor.
+
+In this paper, we denote tensors by Euler script letter, e.g., $\mathcal{A}$. Matrices are denoted by capital letters, e.g., $A$. We denote vectors by boldface lowercase letters, e.g., $\textbf{a}$. Scalars are denoted by lowercase letters, e.g., $a$. For a third order tensor $\mathcal{A}\in \mathbb{C}^{n_1\times n_2\times n_3}$, its $(i,j,k)$-th entry is denoted as $\mathcal{A}_{ijk}$ or $a_{ijk}$. We use the MatLab notation $\mathcal{A}(i,:,:), \mathcal{A}(:,i,:), \mathcal{A}(:,:,i)$ to denote the $i$-th horizontal, lateral and frontal slice of tensor. Moreover, the frontal slice is also denoted as $A^{(i)}$. We denote $\mathcal{A}(i,j,:)$ as the tube of tensor. Tr($\cdot$) denotes the matrix trace. The inner product of two matrices is $\langle A,B\rangle = Tr(A^*B)$. The inner product of $\mathcal{A}$ and $\mathcal{B}$ in $\mathbb{C}^{n_1 \times n_2 \times n_3}$ is $\langle\mathcal{A},\mathcal{B}\rangle=\sum_1^{n_3}\langle A^{(i)},B^{(i)}\rangle$.
+
+For $\mathcal{A}\in\mathbb{R}^{n_1\times n_2 \times n_3}$, with the matlab command $\tt{fft}$, we use $\bar{\mathcal{A}}$ to denote the result of discrete Fourier transform of $\mathcal{A}$ along the third dimension, i.e., $\bar{\mathcal{A}}=\tt{fft}(\mathcal{A},[],3)$.
+\\
+\begin{definition}
+(Block diagonal matrix) $\bar{A}$ denotes a block diagonal matrix, i.e.,
+\[ \bar{A}=\tt{bdiag}(\bar{\mathcal{A}})=
+\begin{bmatrix}
+\bar{A}^{(1)} & & & \\
+& \bar{A}^{(2)} & &\\
+& & \ddots & \\
+& & & \bar{A}^{(n_3)} \\
+\end{bmatrix}.
+\]
+\end{definition}
+
+\begin{definition}
+(Block circulant matrix)
+For a tensor $\mathcal{A}\in \mathbb{R}^{n_1\times n_2 \times n_3}$, its block circulant matrix is defined as following,
+\[\tt{bcirc}(\mathcal{A})=
+\begin{bmatrix}
+A^{(1)} & A^{(n_3)} & \cdots & A^{(2)} \\
+A^{(2)} & A^{(1)} & \cdots & A^{(3)} \\
+\vdots & \vdots & \ddots & \vdots \\
+A^{(n_3)} & A^{(n_3-1)} & \cdots & A^{(1)} \\
+\end{bmatrix}.
+\]
+We define the operator
+\[
+\tt{unfold}(\mathcal{A})=
+\begin{bmatrix}
+A^{(1)} \\
+A^{(2)} \\
+\vdots \\
+A^{(n_3)} \\
+\end{bmatrix},
+\tt{fold}(\tt{unfold}(\mathcal{A}))=\mathcal{A}.
+\]
+\end{definition}
+
+\begin{definition} (T-product)
+For $\mathcal{A}\in \mathbb{R}^{n_1 \times n_2 \times n_3},\mathcal{B}\in \mathbb{R}^{n_2\times l \times n_3}$, the t-product $\mathcal{A}*\mathcal{B}$ is defined to be:
+\begin{equation}
+\mathcal{A}*\mathcal{B}=\tt{fold}(\tt{bcirc(\mathcal{A})\cdot \tt{unfold}(\mathcal{B})}).
+\end{equation}
+\end{definition}
+Note that when $n_3=1$ tensor product reduces to matrix product.
+
+\begin{definition} (Tensor transpose) The conjugate transpose of a tensor $\mathcal{A} \in \mathbb{R}^{n_1 \times n_2 \times n_3}$ is the $n_2 \times n_1 \times n_3$ tensor $\mathcal{A}^*$ obtained by conjugate transposing each of the frontal slice and then reversing the order of transposed frontal slices 2 through $n_3$.
+\end{definition}
+
+\begin{definition} (Identity tensor) The identity tensor $\mathcal{I} \in\mathcal{I}\in \mathbb{R}^{n\times n \times n_3}$ is the tensor whose frontal slice is the $n\times n$ identity matrix and whose other frontal slices are all zeros.
+\end{definition}
+
+\begin{definition} (Orthogonal tensor) A tensor $\mathcal{Q}\in \mathbb{R}^{n\times n\times n_3}$ is orthogonal if it satisfies
+\begin{equation}
+\mathcal{Q}^* * \mathcal{Q} =\mathcal{Q} * \mathcal{Q}^* = \mathcal{I}.
+\end{equation}
+\end{definition}
+
+\begin{definition} (F-diagonal tensor) A tensor is called f-diagonal if each of its frontal slices is a diagonal matrix.
+\end{definition}
+
+\begin{theorem} (T-SVD) For $\mathcal{A}\in \mathbb{R}^{n_1 \times n_2 \times n_3}$, it can be factored as
+\begin{equation}
+\mathcal{A}=\mathcal{U}*\mathcal{S}*\mathcal{V}^*,
+\end{equation}
+where $\mathcal{U}\in\mathbb{R}^{n_1\times n_1\times n_3},\mathcal{V}\in \mathbb{R}^{n_2\times n_2\times n_3}$ are orthogonal, and $\mathcal{S}\in \mathbb{R}^{n_1\times n_2\times n_3}$ is f-diagonal.
+\end{theorem}
+Note that
+\begin{equation}
+(F_{n_3} \bigotimes I_{n_1} )\cdot \tt{bcirc}\it(\mathcal{A})\cdot (F^{-1}_{n_3}\bigotimes I_{n_2})=\bar{A},
+\end{equation}
+where $F_{n_3}$ denotes the $n_3\times n_3$ Discrete Fourier Transform matrix and $\bigotimes$ denotes Kronecker product. Based on this key property, we can compute tensor SVD efficiently based on matrix SVD in the Fourier domain. One can perform the matrix SVD on each frontal slice of $\bar{\mathcal{A}}$, i.e., $\bar{A}^{(i)}=\bar{U}^{(i)}\bar{S}^{(i)}\bar{V}^{(i)*}$, where $\bar{U}^{(i)},\bar{S}^{(i)},\bar{V}^{(i)}$ are frontal slices of $\bar{\mathcal{U}},\bar{\mathcal{S}},\bar{\mathcal{V}}$ respectively.Equivalently, $\bar{A}=\bar{U}\bar{S}\bar{V}^*$. After performing $\tt{ifft}$ along the third dimension, we get that $\mathcal{U}=\tt{ifft}(\bar{\mathcal{U}},[],3),\mathcal{S}=\tt{ifft}(\bar{\mathcal{S}},[],3),\mathcal{V}=\tt{ifft}(\bar{\mathcal{V}},[],3)$.
+
+\begin{definition} (Tensor multi rank and tubal rank) The multi rank of a tensor $\mathcal{A}\in \mathbb{R}^{n_1\times n_2\times n_3}$ is a vector $r\in \mathbb{R}^{n_3}$ with its i-th entry as the rank of the i-th frontal slice of $\bar{\mathcal{A}}$, i.e., $r_i=rank(\bar{A}^{(i)})$. The tubal rank $rank_t(\mathcal{A})$ is the number of nonzero singular tubes of $\mathcal{S}$ where $\mathcal{S}$ is from the t-SVD of $\mathcal{A}=\mathcal{U}*\mathcal{S}*\mathcal{V}^*$.
+\begin{equation}
+rank_t(\mathcal{A})=\# \{i:\mathcal{S}(i,i,:)\}=\max_i r_i.
+\end{equation}
+\end{definition}
+
+\begin{definition} (Tensor nuclear norm) For a tensor $\mathcal{A}\in \mathbb{R}^{n_1\times n_2\times n_3}$, its nuclear norm $||\mathcal{A}||_*$ is defined as the average of the nuclear norm of all the frontal slices of $\bar{\mathcal{A}}$, i.e.,
+\[ ||\mathcal{A}||_*:=\frac{1}{n_3}\sum_{i=1}^{n_3}||\bar{A}^{(i)}||_*.\]
+\end{definition}
+Note that
+\begin{equation}
+\begin{split}
+&||\mathcal{A}||_*=\frac{1}{n_3}\sum^{n_3}_{i=1}||\bar{A}^{(i)}||_*=\frac{1}{n_3}||\bar{A}||_*\\
+=&\frac{1}{n_3}||(F_{n_3}\bigotimes I_{n_1})\cdot \tt{bcirc}\it(\mathcal{A}\cdot(F_{n_3}^{-1}\bigotimes I_{n_2}))||_*\\
+=&\frac{1}{n_3}||\tt{bcirc}\it(\mathcal{A})||_*.
+\end{split}
+\end{equation}
+So the tensor nuclear norm here is the nuclear norm of a new matricization of a tensor with a factor. Block circulant matricization preserves more spacial relationship.
+
+\begin{definition} (Tensor spectral norm) For a tensor $\mathcal{A}\in \mathbb{R}^{n_1\times n_2 \times n_3}$, the tensor spectral norm $||\mathcal{A}||$ is defined as $||\mathcal{A}||:=||\bar{A}||.$
+\end{definition}
+We define the tensor average rank as $rank_a(\mathcal{A})=\frac{1}{n_3}\sum_{i=1}^{n_3}rank(\bar{A}^{(i)})$,
+then the tensor nuclear norm is the convex envelop of the tensor average rank within the unit ball of the tensor spectral norm.
+
+
+\begin{definition} (Tensor incoherence conditions)For $\mathcal{L}_0\in \mathbb{R}^{n_1\times n_2 \times n_3}$ with $rank_t(\mathcal{L}_0)=r$ and skinny t-SVD $\mathcal{L}_0=\mathcal{U}*\mathcal{S}*\mathcal{V}^*$,where $\mathcal{U}\in \mathbb{R}^{n_1\times r \times n_3},\mathcal{V}\in \mathbb{R}^{n_2\times r\times n_3}$ satisfying $\mathcal{U}^* *\mathcal{U}=\mathcal{I}$, $\mathcal{V}^* *\mathcal{V}=\mathcal{I}$ and $\mathcal{S}\in \mathbb{R}^{r\times r\times n_3}$is f-diagonal. Then we say that $\mathcal{L}_0$ is said to satisfy the tensor incoherence conditions with parameter $\mu$ if
+\begin{equation}
+\max_{i=1,\cdots,n_1}||\mathcal{U}^* * \mathring{\mathfrak{e}_i}||_F\le \sqrt{\frac{\mu r}{n_1 n_3}},
+\end{equation}
+\begin{equation}
+\max_{i=1,\cdots,n_1}||\mathcal{V}^* * \mathring{\mathfrak{e}_j}||_F\le \sqrt{\frac{\mu r}{n_2 n_3}},
+\end{equation}
+\begin{equation}
+||\mathcal{U} * \mathcal{V}^*||_{\infty}\le \sqrt{\frac{\mu r}{n_1 n_2 n_3^2}}.
+\end{equation}
+\end{definition}
+
+\section{Main Result}
+The following theorem is the main result of this paper. It shows that under certain assumptions, one can exactly recover the low-rank and sparse components from incomplete measurements by solving $(\ref{TCPCP})$.
+
+To make this problem meaningful, two conditions must be satisfied: (i) $\mathcal{L}_0$ is not sparse and (ii) $\mathcal{S}_0$ is not low-rank. Here we introduce the tensor incoherence condition $\cite{LFC}$ to describe (i). For (ii), we generate a random model: each element of $\mathcal{S}_0$ is an element of its support set independently with probability $\rho$. The signs of all entries in support set are i.i.d. Bernoulli variables which take the value $\pm 1$ with probability $1/2$. We call this random distribution as an $i.i.d. Bernoulli$-$Rademacher$ model.
+
+Another condition is about the sampling ratio. Intuitively it is impossible to realize perfect recovery without enough measurements. We give a theoretical lower bound for exact recovery in the following theorem. Naturally this bound is closely related to the degrees of freedom in $(\mathcal{L}_0, \mathcal{S}_0)$. Since $\mathcal{L}_0$ is determined by $\bar{L_0}$, we only need to focus on the degrees of freedom of $\bar{L_0}$. We can fully specify $\bar{L_0}$ using $(n_1+n_2-r)rn_3$ real numbers. Roughly we can consider $||\mathcal{S}_0||_0$ to be the number of degrees of freedom in $\mathcal{S}_0$.
+\begin{theorem} \label{main}
+Let $\mathcal{L}_0,\mathcal{S}_0\in \mathbb{R}^{n_1\times n_2 \times n_3}$ with $n_1=n_2$, and suppose that $\mathcal{L}_0$ is a rank-$r$,$\mu$-incoherent tensor with
+\begin{equation}
+r\le \frac{c_r n_2 n_3}{\mu (\log(n_1 n_3)^2},
+\end{equation}
+and sign($\mathcal{S}_0$) is i.i.d. Bernoulli-Rademacher with non-zero probability $\rho<c_{s}$. Let $Q \subset \mathbb{R}^{n_1 \times n_2 \times n_3}$ be a random subspace of dimension
+\begin{equation}
+dim(Q)\ge C_{meas}\cdot (\rho n_1 n_2 n_3 + n_1 n_3 r)\cdot  \log^2 (n_1 n_3),
+\end{equation}
+distributed according to the Haar measure, probabilistically independent of sign$(\mathcal{S}_0)$. Then with probability of at least $1-C(n_1 n_3)^{-9}$ in (sign($\mathcal{S}_0$),$Q$), the solution to
+\begin{equation}\label{solutionEq}
+\min \, ||\mathcal{L}||_{*}+\lambda||\mathcal{S}||_1, \quad s.t.\mathcal{P}_Q[\mathcal{L+S}]=\mathcal{P}_Q[\mathcal{L}_0+\mathcal{S}_0],
+\end{equation}
+with $\lambda = 1/\sqrt{n_1 n_3}$ is unique and equal to $(\mathcal{L}_0,\mathcal{S}_0)$. Above, $c_r,c_s,c_{meas}$ are positive numerical constants.
+\end{theorem}
+$\cite{WGM}$ gives a tight bound for matrix case. Note that when $n_3=1$, our result reduces to $\cite{WGM}$ so the above theorem is a natural extension of theorem 2.1 in $\cite{WGM}$.
+
+\section{Numerical Experiments}
+In this section, we design proper algorithm to solve the solution of TCPCP given in theorem $\ref{main}$. Then conduct numerical experiments to corroborate our main results, applying TCPCP to image observed by Guassian sampling. Specifically, we solve (\ref{solutionEq}) by Alternating Direction Method of Multipliers (ADMM).
+\subsection{Optimization by ADMM}
+
+\begin{equation}
+\min_{\mathcal{L},\mathcal{S}}\|\mathcal{L}\|_*+\lambda \|\mathcal{S}\|_1, s.t. P_{\Omega}(\mathcal{S+L})=P_{\Omega}\mathcal{X}_0.
+\end{equation}
+
+Rewrite the constraint of \ref{solutionEq} into $G\mathcal{(S(:)+L(:))}=G\mathcal{X}_0(:)=g$, where "(:)" denote the MatLab notation. In order to solve this problem by ADMM, we introduce $\mathcal{P}, \mathcal{Q}$ and then obtain the following optimization problem,
+\begin{align*}
+ \min_{\mathcal{S},\mathcal{L},\mathcal{P},\mathcal{Q}}\|\mathcal{P}
+\|_*+\lambda \|\mathcal{Q}\|_1+\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2,\\
+%\quad
+ s.t.\, \mathcal{P=L,~Q=S}.
+\end{align*}
+The Lagrangian is augmented as
+\begin{align*}
+\mathcal{L}_{\rho_1,\rho_2}(\mathcal{S},\mathcal{L},\mathcal{P},\mathcal{Q})
+=&\|P\|_*+\lambda \|\mathcal{Q}\|_1\\
++&\frac{\rho_1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_{F}^2\\
++&\frac{\rho_2}{2}\|\mathcal{S-Q}+\rho_2^{-2}\mathcal{Z}_2\|_{F}^2\\
++&\frac{\rho_3}{2}\|G\mathcal{(S(:)+L(:))}-g+\rho_3^{-2}\mathcal{Z}_3\|_{F}^2
+\end{align*}
+Each of the above sub-problems can be solved as follows,
+\begin{align*}
+\mathcal{P}
+&=arg\min_{\mathcal{P}}\frac{1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_F^2
+ +\frac{1}{\rho_1}\|P\|_*\notag\\
+&=D_{1/\rho_1}(\mathcal{L}+\rho_1^{-1}\mathcal{Z}_1)\\
+\mathcal{Q}
+&=arg\min_{\mathcal{Q}}\frac{1}{2}\|\mathcal{S-Q}+\rho_2^{-1}\mathcal{Z}_1\|_F^2
+ +\frac{\lambda}{\rho_2}\|P\|_*\notag\\
+&=S_{\lambda/\rho_2}(\mathcal{S}+\rho_2^{-1}\mathcal{Z}_2)\\
+\mathcal{L}
+&=arg\min_{\mathcal{L}}\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2
+ +\frac{\rho_1}{2}\|\mathcal{L-P}+\rho_1^{-1}\mathcal{Z}_1\|_{F}^2\notag\\
+&=(\mu G^TG+\rho_1I)^{-1}(\mu G^T g+\rho_1\mathcal{P}(:)-\mathcal{Z}_1
+ -\mu G^TG\mathcal{S}(:))\\
+\mathcal{S}
+&=arg\min_{\mathcal{S}}\frac{\mu}{2}\|G\mathcal{(S(:)+L(:))}-g\|_{F}^2
+ +\frac{\rho_2}{2}\|\mathcal{S-Q}+\rho_2^{-1}\mathcal{Z}_2\|_{F}^2\notag\\
+&=(\mu G^TG+\rho_2I)^{-1}(\mu G^T g+\rho_2\mathcal{Q}(:)-\mathcal{Z}_2
+ -\mu G^TG\mathcal{L}(:))
+\end{align*}
+Therefore, we can solve the optimization problem (\ref{solutionEq}) by ADMM, shown in Algorithm 1.
+\begin{algorithm}[!htbp]
+  \caption*{\textbf{Algorithm 1: Solve TCPCP by ADMM}}
+  \begin{algorithmic}[1]
+    \State Initialization $\mathcal{S}=\mathcal{L}=\mathcal{P}=\mathcal{Q}=\mathcal{Z}_1=\mathcal{Z}_2=zeros(dim(X_0))$
+    \For{$k=1,2,\cdots$}
+        \State update $\mathcal{P}$: $\mathcal{P}=D_{\frac{1}{\rho_1}}(\mathcal{L}+\rho_1^{-1}\mathcal{Z}_1)$
+        \State update $\mathcal{Q}$: $\mathcal{P}=S_{\frac{\lambda}{\rho_2}}(\mathcal{S}+\rho_2^{-1}\mathcal{Z}_2)$
+        \State update $\mathcal{L}$: $\mathcal{L}(:)$ = $(\mu G^TG+\rho_1I)^{-1}
+                                                (\rho_3 G^T g+\rho_1\mathcal{P}(:)-\mathcal{Z}_1-\mu G^TG\mathcal{S}(:)-G^TZ_3)$
+        \State update $\mathcal{S}$: $\mathcal{S}(:)$ = $(\mu G^TG+\rho_1I)^{-1}
+                                                (\rho_3 G^T g+\rho_2\mathcal{Q}(:)-\mathcal{Z}_2-\mu G^TG\mathcal{L}(:)-G^TZ_3)$
+        \State dual update $\mathcal{Z}_1$: $\mathcal{Z}_1=\mathcal{Z}_1+\rho_1*(\mathcal{L-P})$
+        \State dual update $\mathcal{Z}_2$: $\mathcal{Z}_2=\mathcal{Z}_2+\rho_2*(\mathcal{S-Q})$
+        \State dual update $\mathcal{Z}_3$: $\mathcal{Z}_3=\mathcal{Z}_3+\rho_3*(G\mathcal{(S(:)+L(:))}-g)$
+    \EndFor
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{Exact Recovery from Varying Fractions of Errors and Observations}
+\section{Conclusion}
+In this paper, we have proved that under certain conditions, one can exactly recover both low-rank and sparse components from a small set of measurements. Meanwhile we established a theoretical bound about the number of measurements required for perfect recovery. In experiment,......
+
+% use section* for acknowledgment
+\section*{Acknowledgment}
+
+The authors would like to thank...
+
+
+% Can use something like this to put references on a page
+% by themselves when using endfloat and the captionsoff option.
+\ifCLASSOPTIONcaptionsoff
+  \newpage
+\fi
+
+
+
+\begin{thebibliography}{1}
+
+\bibitem{KB}Kolda T G, Bader B W. Tensor decompositions and applications[J]. SIAM review, 2009, 51(3): 455-500.
+\bibitem{KBH}Kilmer M E, Braman K, Hao N, et al. Third-order tensors as operators on matrices: A theoretical and computational framework with applications in imaging[J]. SIAM Journal on Matrix Analysis and Applications, 2013, 34(1): 148-172.
+\bibitem{CLM}Candès E J, Li X, Ma Y, et al. Robust principal component analysis?[J]. Journal of the ACM (JACM), 2011, 58(3): 11.
+\bibitem{LFC}Lu C, Feng J, Chen Y, et al. Tensor robust principal component analysis: Exact recovery of corrupted low-rank tensors via convex optimization[C]//Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2016: 5249-5257.
+\bibitem{WGM}Wright J, Ganesh A, Min K, et al. Compressive principal component pursuit[J]. Information and Inference: A Journal of the IMA, 2013, 2(1): 32-68.
+\bibitem{VR}Vershynin, R. (2011) Introduction to the
+    non-asymptotic analysis of random matrices. Available at
+http://www-personal.umich.edu/ romanv/papers/non-asymptotic-rmt-plain.pdf.
+\bibitem{LM}Laurent, B. $\&$ Massart, P. (2000) Adaptive estimation of a quadratic function by model selection. Ann. Statist., 28, 1302$-$1338.
+\bibitem{LM2}Ledoux, M. (2001) The Concentration of Measure Phenomenon. Providence, RI: American Mathematical
+Society.
+\bibitem{DS}Davidson, K. $\&$ Szarek, S. (2001) Local operator theory, random matrices and banach spaces. Handbook of
+the Geometry of Banach Spaces (W. B. Johnson $\&$ J. Lindenstrauss eds) Elsevier Science, pp. 317$-$366.
+\bibitem{VR2}Vershynin, R. (2009) Lectures on geometric functional analysis. Available at http://www-personal.umich.
+edu/ romanv/papers/GFA-book/GFA-book.pdf.
+\bibitem{MatrixADMM} Trémoulhéac B, Dikaios N, Atkinson D, et al. Dynamic MR Image Reconstruction–Separation From Undersampled (${\bf k}, t $)-Space via Low-Rank Plus Sparse Prior[J]. IEEE transactions on medical imaging, 2014, 33(8): 1689-1701.
+\end{thebibliography}
+
+\begin{IEEEbiography}{Michael Shell}
+Biography text here.
+\end{IEEEbiography}
+
+% if you will not have a photo at all:
+\begin{IEEEbiographynophoto}{John Doe}
+Biography text here.
+\end{IEEEbiographynophoto}
+
+
+
+\end{document}
+
+

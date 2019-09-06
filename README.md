@@ -5,11 +5,11 @@
 - Other helping funtions can be found in `methods/`
 - Codes listed below for tensor operators are borrowed from [LibADMM](https://github.com/canyilu/LibADMM):
 
-  ```
+```
 proximal_operator/
 tensor_tools/
 methods/trpca_tnn.m
-  ```
+```
 
 ## Documentation
 - `admm_ctpcp/` explains the algorithm for solving CTPCP by ADMM in details.
